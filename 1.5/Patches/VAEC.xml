@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+<Operation Class="PatchOperationFindMod">
+        <mods>
+            <li>Vanilla Animals Expanded - Caves (Fork)</li>
+        </mods>
+		
+        <match Class="PatchOperationSequence">
+            <!--<success>Always</success>-->
+            <operations>
+
+         		
+
+<li Class="PatchOperationAdd">
+  <xpath>Defs/ThingDef[defName="VAECaves_InsectoidHulk"]/race</xpath>
+  <value>
+  <giveNonToolUserBeatFireVerb>true</giveNonToolUserBeatFireVerb>
+  </value>
+</li>
+
+<li Class="PatchOperationAdd">
+  <xpath>Defs/ThingDef[defName="VAECaves_GiantSpider"]/race</xpath>
+  <value>
+  <giveNonToolUserBeatFireVerb>true</giveNonToolUserBeatFireVerb>
+  </value>
+</li>
+
+<li Class="PatchOperationAdd">
+  <xpath>Defs/ThingDef[defName="VAECaves_AncientGiantSpider"]/race</xpath>
+  <value>
+  <giveNonToolUserBeatFireVerb>true</giveNonToolUserBeatFireVerb>
+  </value>
+</li>
+
+</operations>
+</match>
+</Operation>
+
+</Patch>
