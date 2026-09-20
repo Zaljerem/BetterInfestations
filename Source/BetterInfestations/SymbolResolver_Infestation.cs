@@ -1,109 +1,240 @@
 using RimWorld;
 using RimWorld.BaseGen;
 using System;
+using Unity.Burst.Intrinsics;
+using UnityEngine;
 using Verse;
-using Verse.Noise;
 
 namespace BetterInfestations
 {
     public class SymbolResolver_Infestation : SymbolResolver
     {
+
+        public static readonly SimpleCurve PointsFactorCurve = new SimpleCurve
+    {
+       new CurvePoint(0f, 0.7f),
+       new CurvePoint(2000f, 0.55f),
+       new CurvePoint(5000f, 0.45f)
+    };
+
         public override void Resolve(ResolveParams rp)
         {
-            if (BetterInfestationsMod.settings == null) return;
+            if (BetterInfestationsMod.settings == null)
+                return;
 
-            //if (!Patches.Patch_InfestationCellFinder_TryFindCell.TryFindCell(out IntVec3 pos, BaseGen.globalSettings.map))
-            //{
-            //   return;
-            // }
-            //InfestationCellFinder.TryFindCell(out IntVec3 pos, BaseGen.globalSettings.map);
-            //Patches.Patch_InfestationCellFinder_TryFindCell.TryFindCell(out IntVec3 pos, BaseGen.globalSettings.map);
+            Map map = BaseGen.globalSettings.map;
+
+            //float baseThreat = StorytellerUtility.DefaultThreatPointsNow(map);
+            float baseThreat = StorytellerUtility.DefaultSiteThreatPointsNow();
+
+            Log.Message($"[BI] Base threat points: {baseThreat}");
+
+            float curvedThreat = baseThreat * PointsFactorCurve.Evaluate(baseThreat);
+
+            Log.Message($"[BI] Curved threat points: {curvedThreat}");
+
+            float threatScale = Find.Storyteller.difficulty.threatScale;
+
+            Log.Message($"[BI] Threat scale: {threatScale}");
+
+            float finalThreat = curvedThreat * threatScale;
+
+            Log.Message($"[BI] FINAL threat points: {finalThreat}");
+
+            float threatPoints = finalThreat;            
+
+            // Determine scale
+            int hiveCount = CalculateHiveCount(threatPoints);
+            int pawnsPerHive = CalculatePawnsPerHive(threatPoints, hiveCount);
+
+            Log.Message($"[BI] Hives: {hiveCount}");
+            Log.Message($"[BI] Pawns per hive: {pawnsPerHive}");
+
+            if (!TryFindRootCell(map, out IntVec3 rootCell))
+                return;
+
+            // Spawn root hive
+            Hive rootHive = SpawnHive(rootCell, map, pawnsPerHive, spawnQueen: true, threatPoints);          
+
+            if (rootHive == null)
+                return;
+
+           
+            // Spawn child hives around the root
+            for (int i = 1; i < hiveCount; i++)
+            {
+                if (rootHive.GetComp<CompSpawnerHives>()
+                    .TrySpawnChildHive(out Hive childHive))
+                {
+                    SpawnHiveContents(
+                        childHive,
+                        pawnsPerHive,
+                        threatPoints: threatPoints,
+                        spawnQueen: Rand.Chance(QueenChance(threatPoints)
+                        )
+                    );
+                    
+                }
+            }
+
+            HiveUtility.SpawnRandomCorpses(rootHive);
+
+            if (finalThreat > 1000f)
+            {
+                Log.Message($"[BI] Threat points > 1000, bonus loot generated");
+                HiveUtility.SpawnRandomItems(rootHive);
+            }
+        }
+
+        #region Scaling
+
+        private int CalculateHiveCount(float threatPoints)
+        {
+            
+            int baseHives = Mathf.Clamp(
+                Mathf.RoundToInt(threatPoints / 220f),
+                1,
+                BetterInfestationsMod.settings.maxHivesPerMap
+            );
+
+            return Rand.RangeInclusive(baseHives, baseHives + 1);
+        }
+
+        private int CalculatePawnsPerHive(float threatPoints, float hiveCount)
+        {
+
+            float pawnPointsPerHive = threatPoints / hiveCount;
+
+            int pawnCount = Mathf.RoundToInt(pawnPointsPerHive / 40f);
+            pawnCount = Mathf.Clamp(pawnCount, 3, 15);
+            return pawnCount;
+
+        }
+
+        //private float QueenChance(float threatPoints)
+        // {
+        // One guaranteed queen at root
+        // Extra queens only at high threat
+        //    return Mathf.Clamp01(threatPoints / 1500f);
+        // }
+
+        private float QueenChance(float threatPoints)
+        {
+            const float baseChance = 0.02f; // 2% minimum
+            const float maxChance = 0.65f;  // never guaranteed on child hives
+
+            // Threat scaling tuned for site-level points
+            float scaled = threatPoints / 1200f;
+
+            return Mathf.Clamp(
+                baseChance + scaled,
+                baseChance,
+                maxChance
+            );
+        }
+
+        #endregion
+
+        #region Placement
+
+        private bool TryFindRootCell(Map map, out IntVec3 result)
+        {
+            // Vanilla infestation logic - too restrictive
+            //if (Patches.Patch_InfestationCellFinder_TryFindCell.TryFindCell(out result, map))
+             //return true;
+
+            // Random standable, unfogged near center - better for a world site
+            Predicate<IntVec3> validator = c =>
+                c.Standable(map) &&
+                !c.Fogged(map) &&
+                c.GetRoom(map).TouchesMapEdge == false;
 
             Predicate<IntVec3> validator1 = cell =>
-                       !cell.Fogged(BaseGen.globalSettings.map) && cell.Walkable(BaseGen.globalSettings.map);
+                       !cell.Fogged(map) && cell.Walkable(map);
 
-            RCellFinder.TryFindRandomCellNearTheCenterOfTheMapWith(validator1, BaseGen.globalSettings.map, out IntVec3 pos);
+            return RCellFinder.TryFindRandomCellNearTheCenterOfTheMapWith(validator1, map, out result);
+            
+        }
 
-            //CellFinder.TryFindRandomCell(BaseGen.globalSettings.map, validator1, out IntVec3 pos);   
+        #endregion
 
-            //CellFinderLoose.TryGetRandomCellWith(validator1, BaseGen.globalSettings.map, 1000, out IntVec3 pos);
+        #region Hive Spawning
 
-            int num = BetterInfestationsMod.settings.maxHivesPerMap;
-            Hive hive = (Hive)ThingMaker.MakeThing(ThingDefOf.BI_Hive);
+        private Hive SpawnHive(
+            IntVec3 cell,
+            Map map,
+            int pawnsPerHive,
+            bool spawnQueen,
+            float threatPoints)
+        {
+            Hive hive = ThingMaker.MakeThing(ThingDefOf.BI_Hive) as Hive;
             hive.SetFaction(Faction.OfInsects);
-            hive = (Hive)GenSpawn.Spawn(hive, pos, BaseGen.globalSettings.map);
-            if (hive != null)
+
+            hive = GenSpawn.Spawn(hive, cell, map) as Hive;
+
+            if (hive == null)
+                return null;
+
+            SpawnHiveContents(hive, pawnsPerHive, spawnQueen, threatPoints);
+            return hive;
+        }
+
+        private void SpawnHiveContents(
+            Hive hive,
+            int pawnsPerHive,
+            bool spawnQueen,
+            float threatPoints)
+        {
+            // Glowpods
+            TrySpawnFromComp<CompSpawner>(hive, ThingDefOf.GlowPod, 1);
+
+            // Jelly
+            TrySpawnFromComp<CompSpawnerJelly>(
+                hive,
+                ThingDefOf.InsectJelly,
+                Rand.Range(6, 20)
+            );
+
+            // Regular insects
+            for (int i = 0; i < pawnsPerHive; i++)
             {
-                CompSpawner compSpawner = hive.GetComp<CompSpawner>();
-                if (compSpawner.PropsSpawner.thingToSpawn == RimWorld.ThingDefOf.GlowPod)
-                {
-                    compSpawner.TryDoSpawn();
-                }
-                CompSpawnerJelly compSpawnerJelly = hive.GetComp<CompSpawnerJelly>();
-                if (compSpawnerJelly.PropsSpawner.thingToSpawn == RimWorld.ThingDefOf.InsectJelly)
-                {
-                    for (int i = 0; i < Rand.Range(6, 20); i++)
-                    {
-                        compSpawnerJelly.TryDoSpawn();
-                    }
-                }
-                for (int i = 0; i < 2; i++)
-                {
-                    for (int j = 0; j < Rand.Range(2, 8); j++)
-                    {
-                        hive.CompSpawnerPawns.TrySpawnPawn(i, out Pawn _, hive.CompSpawnerPawns.RandomPawnKindDef(), false);
-                    }
-                }
-                hive.CompSpawnerPawns.TrySpawnPawn(0, out Pawn _, PawnKindDefOf.BI_Queen, false);
-                //HiveUtility.SpawnRandomItems(hive, DefDatabase<ThingDef>.AllDefsListForReading);
+                hive.CompSpawnerPawns.TrySpawnPawn(
+                    0,
+                    out Pawn _,
+                    hive.CompSpawnerPawns.RandomWeightedPawnKindDef(threatPoints),
+                    false
+                );
+            }
 
-                for (int i = 0; i < num - 1; i++)
-                {
-                    //Log.Message($"Hives: {num}");
-                    if (hive.GetComp<CompSpawnerHives>().TrySpawnChildHive(out Hive newHive))
-                    {
-                        newHive.SetFaction(hive.Faction);
-                        compSpawner = newHive.GetComp<CompSpawner>();
-                        if (compSpawner.PropsSpawner.thingToSpawn == RimWorld.ThingDefOf.GlowPod)
-                        {
-                           // Log.Message("Try spawn glowpod");
-                            compSpawner.TryDoSpawn();
-                        }
-                        compSpawnerJelly = newHive.GetComp<CompSpawnerJelly>();
-                        if (compSpawnerJelly.PropsSpawner.thingToSpawn == RimWorld.ThingDefOf.InsectJelly)
-                        {
-                            for (int j = 0; j < Rand.Range(6, 20); j++)
-                            {
-                               // Log.Message("Try spawn jelly");
-                                compSpawnerJelly.TryDoSpawn();
-                            }
-                        }
-                        for (int j = 0; j < 2; j++)
-                        {
-                            for (int k = 0; k < Rand.Range(3, 8); k++)
-                            {
-                               // Log.Message("Try spawn pawns");
-                                newHive.CompSpawnerPawns.TrySpawnPawn(j, out Pawn _, newHive.CompSpawnerPawns.RandomPawnKindDef(), false);
-                            }
-                        }
-                        if (Rand.Range(1, 100) <= 50)
-                        {
-                           // Log.Message("Try spawn pawns");
-                            newHive.CompSpawnerPawns.TrySpawnPawn(0, out Pawn _, PawnKindDefOf.BI_Queen, false);
-                        }
-                       // Log.Message("Try spawn items");
-                        HiveUtility.SpawnRandomItems(newHive, DefDatabase<ThingDef>.AllDefsListForReading);
-                    }
-                    else
-                    {
-                       // Log.Message("TrySpawnChildHive failed");
-                    }
+            // Queen
+            if (spawnQueen)
+            {
+                hive.CompSpawnerPawns.TrySpawnPawn(
+                    0,
+                    out Pawn _,
+                    PawnKindDefOf.BI_Queen,
+                    false
+                );
+            }
 
-                }
-                //Log.Message("Exit child spawn");
-                HiveUtility.SpawnRandomCorpses(hive);
+            HiveUtility.SpawnRandomItems(hive);
+        }
+
+        private void TrySpawnFromComp<T>(
+            Hive hive,
+            ThingDef expected,
+            int count) where T : ThingComp
+        {
+            T comp = hive.GetComp<T>();
+            if (comp is CompSpawner spawner &&
+                spawner.PropsSpawner.thingToSpawn == expected)
+            {
+                for (int i = 0; i < count; i++)
+                    spawner.TryDoSpawn();
             }
         }      
 
+
+        #endregion
     }
 }

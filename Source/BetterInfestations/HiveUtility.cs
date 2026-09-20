@@ -1,7 +1,8 @@
-using System;
-using System.Reflection;
-using System.Collections.Generic;
 using RimWorld;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Verse;
 using Verse.AI;
 using Verse.AI.Group;
@@ -380,473 +381,357 @@ namespace BetterInfestations
             }
             return false;
         }
+
         public static void SpawnRandomCorpses(Hive hive)
         {
             if (hive == null) return;
 
-            List<Faction> factions = Find.FactionManager.AllFactions as List<Faction>;
-            Faction pirateFaction = null;
-            Faction mechanoidFaction = null;
-            Faction tribeSavageFaction = null;
-            Faction tribeRoughFaction = null;
-            Faction tribeCivilFaction = null;
-            Faction outlanderRoughFaction = null;
-            Faction outlanderCivilFaction = null;
-            foreach (Faction faction in factions)
-            {
-                if (faction.def.defName == "Pirate")
-                    pirateFaction = faction;
-                else if (faction.def.defName == "Mechanoid")
-                    mechanoidFaction = faction;
-                else if (faction.def.defName == "TribeSavage")
-                    tribeSavageFaction = faction;
-                else if (faction.def.defName == "TribeRough")
-                    tribeRoughFaction = faction;
-                else if (faction.def.defName == "TribeCivil")
-                    tribeCivilFaction = faction;
-                else if (faction.def.defName == "OutlanderRough")
-                    outlanderRoughFaction = faction;
-                else if (faction.def.defName == "OutlanderCivil")
-                    outlanderCivilFaction = faction;
-            }
-            List<PawnKindDef> allPawnKinds = DefDatabase<PawnKindDef>.AllDefsListForReading;
-            PawnKindDef scavenger = null;
-            PawnKindDef thrasher = null;
-            PawnKindDef pirate = null;
-            PawnKindDef pirateBoss = null;
-            PawnKindDef grenadier_destructive = null;
-            PawnKindDef grenadier_emp = null;
-            PawnKindDef grenadier_smoke = null;
-            PawnKindDef mercenary_gunner = null;
-            PawnKindDef mercenary_sniper = null;
-            PawnKindDef mercenary_sniper_acidifier = null;
-            PawnKindDef mercenary_slasher = null;
-            PawnKindDef mercenary_slasher_acidifier = null;
-            PawnKindDef mercenary_heavy = null;
-            PawnKindDef mercenary_elite = null;
-            PawnKindDef mercenary_elite_acidifier = null;
-            PawnKindDef tribal_penitent = null;
-            PawnKindDef tribal_archer = null;
-            PawnKindDef tribal_warrior = null;
-            PawnKindDef tribal_hunter = null;
-            PawnKindDef tribal_trader = null;
-            PawnKindDef tribal_berserker = null;
-            PawnKindDef tribal_heavyarcher = null;
-            PawnKindDef tribal_chiefMelee = null;
-            PawnKindDef tribal_chiefRanged = null;
-            PawnKindDef villager = null;
-            PawnKindDef town_guard = null;
-            PawnKindDef town_trader = null;
-            PawnKindDef town_councilman = null;
-            PawnKindDef mech_centipede = null;
-            PawnKindDef mech_lancer = null;
-            PawnKindDef mech_scyther = null;
-            PawnKindDef mech_pikeman = null;
+            // --------------------------------------------------
+            // Factions
+            // --------------------------------------------------
 
-            List<PawnKindDef> piratePawnKinds = new List<PawnKindDef>();
-            List<PawnKindDef> mercenaryPawnKinds = new List<PawnKindDef>();
-            List<PawnKindDef> tribeCivilPawnKinds = new List<PawnKindDef>();
-            List<PawnKindDef> tribeRoughPawnKinds = new List<PawnKindDef>();
-            List<PawnKindDef> tribeSavagePawnKinds = new List<PawnKindDef>();
-            List<PawnKindDef> outlanderPawnKinds = new List<PawnKindDef>();
-            List<PawnKindDef> mechanoidPawnKinds = new List<PawnKindDef>();
+            Faction pirateFaction = FactionByDef("Pirate");
+            Faction mechanoidFaction = FactionByDef("Mechanoid");
+            Faction tribeSavageFaction = FactionByDef("TribeSavage");
+            Faction tribeRoughFaction = FactionByDef("TribeRough");
+            Faction tribeCivilFaction = FactionByDef("TribeCivil");
+            Faction outlanderRoughFaction = FactionByDef("OutlanderRough");
+            Faction outlanderCivilFaction = FactionByDef("OutlanderCivil");
 
-            foreach (PawnKindDef pawnKindDef in allPawnKinds)
-            {
-                if (pawnKindDef.defName == "Scavenger")
-                {
-                    scavenger = pawnKindDef;
-                    piratePawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Thrasher")
-                {
-                    thrasher = pawnKindDef;
-                    piratePawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Pirate")
-                {
-                    pirate = pawnKindDef;
-                    piratePawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "PirateBoss")
-                {
-                    pirateBoss = pawnKindDef;
-                }
-                else if (pawnKindDef.defName == "Grenadier_Destructive")
-                {
-                    grenadier_destructive = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Grenadier_EMP")
-                {
-                    grenadier_emp = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Grenadier_Smoke")
-                {
-                    grenadier_smoke = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mercenary_Gunner")
-                {
-                    mercenary_gunner = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mercenary_Sniper")
-                {
-                    mercenary_sniper = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mercenary_Sniper_Acidifier")
-                {
-                    mercenary_sniper_acidifier = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mercenary_Slasher")
-                {
-                    mercenary_slasher = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mercenary_Slasher_Acidifier")
-                {
-                    mercenary_slasher_acidifier = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mercenary_Heavy")
-                {
-                    mercenary_heavy = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mercenary_Elite")
-                {
-                    mercenary_elite = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mercenary_Elite_Acidifier")
-                {
-                    mercenary_elite_acidifier = pawnKindDef;
-                    mercenaryPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Tribal_Penitent")
-                {
-                    tribal_penitent = pawnKindDef;
-                    tribeRoughPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Tribal_Archer")
-                {
-                    tribal_archer = pawnKindDef;
-                    tribeRoughPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Tribal_Warrior")
-                {
-                    tribal_warrior = pawnKindDef;
-                    tribeRoughPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Tribal_Hunter")
-                {
-                    tribal_hunter = pawnKindDef;
-                    tribeCivilPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Tribal_Trader")
-                {
-                    tribal_trader = pawnKindDef;
-                    tribeCivilPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Tribal_Berserker")
-                {
-                    tribal_berserker = pawnKindDef;
-                    tribeSavagePawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Tribal_HeavyArcher")
-                {
-                    tribal_heavyarcher = pawnKindDef;
-                    tribeSavagePawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Tribal_ChiefMelee")
-                {
-                    tribal_chiefMelee = pawnKindDef;
-                }
-                else if (pawnKindDef.defName == "Tribal_ChiefRanged")
-                {
-                    tribal_chiefRanged = pawnKindDef;
-                }
-                else if (pawnKindDef.defName == "Villager")
-                {
-                    villager = pawnKindDef;
-                    outlanderPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Town_Guard")
-                {
-                    town_guard = pawnKindDef;
-                    outlanderPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Town_Trader")
-                {
-                    town_trader = pawnKindDef;
-                    outlanderPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Town_Councilman")
-                {
-                    town_councilman = pawnKindDef;
-                    outlanderPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mech_Centipede")
-                {
-                    mech_centipede = pawnKindDef;
-                    mechanoidPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mech_Lancer")
-                {
-                    mech_lancer = pawnKindDef;
-                    mechanoidPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mech_Scyther")
-                {
-                    mech_scyther = pawnKindDef;
-                    mechanoidPawnKinds.Add(pawnKindDef);
-                }
-                else if (pawnKindDef.defName == "Mech_Pikeman")
-                {
-                    mech_pikeman = pawnKindDef;
-                    mechanoidPawnKinds.Add(pawnKindDef);
-                }
-            }
+            // --------------------------------------------------
+            // PawnKind groups (data-driven, mod-safe)
+            // --------------------------------------------------
 
-            List<Faction> factionsList = new List<Faction> { null, null, Faction.OfAncients, Faction.OfAncientsHostile, mechanoidFaction, pirateFaction, pirateFaction, tribeRoughFaction, tribeSavageFaction, tribeCivilFaction, outlanderRoughFaction, outlanderCivilFaction };
-            Faction faction1 = factionsList.RandomElement();
-            factionsList.RemoveAll(x => x == faction1);
-            Faction faction2 = factionsList.RandomElement();
+            var piratePawnKinds = PawnKinds(pk =>
+                pk.defaultFactionDef?.defName == "Pirate" &&
+                !pk.defName.Contains("Boss"));
 
-            if (Rand.Range(1, 100) <= 15 && (faction1 == Faction.OfAncients || faction2 == Faction.OfAncients))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.AncientSoldier, Faction.OfAncients, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.AncientSoldier, Faction.OfAncients, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.AncientSoldier, Faction.OfAncients, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 15 && (faction1 == Faction.OfAncientsHostile || faction2 == Faction.OfAncientsHostile))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.AncientSoldier, Faction.OfAncientsHostile, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.AncientSoldier, Faction.OfAncientsHostile, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.AncientSoldier, Faction.OfAncientsHostile, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 30 && (faction1 == mechanoidFaction || faction2 == mechanoidFaction))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(mechanoidPawnKinds.RandomElement(), mechanoidFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(mechanoidPawnKinds.RandomElement(), mechanoidFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(mechanoidPawnKinds.RandomElement(), mechanoidFaction, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 40 && (faction1 == pirateFaction))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(piratePawnKinds.RandomElement(), pirateFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(piratePawnKinds.RandomElement(), pirateFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(piratePawnKinds.RandomElement(), pirateFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 15) SpawnCorpsesNearHive(pirateBoss, pirateFaction, 1, hive);
-            }
-            if (Rand.Range(1, 100) <= 40 && (faction2 == pirateFaction))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(mercenaryPawnKinds.RandomElement(), pirateFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(mercenaryPawnKinds.RandomElement(), pirateFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(mercenaryPawnKinds.RandomElement(), pirateFaction, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 25 && (faction1 == tribeRoughFaction || faction2 == tribeRoughFaction))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeRoughPawnKinds.RandomElement(), tribeRoughFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeRoughPawnKinds.RandomElement(), tribeRoughFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeRoughPawnKinds.RandomElement(), tribeRoughFaction, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 25 && (faction1 == tribeSavageFaction || faction2 == tribeSavageFaction))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeSavagePawnKinds.RandomElement(), tribeSavageFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeSavagePawnKinds.RandomElement(), tribeSavageFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeSavagePawnKinds.RandomElement(), tribeSavageFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 15) SpawnCorpsesNearHive(tribal_chiefMelee, tribeSavageFaction, 1, hive);
-                if (Rand.Range(1, 100) <= 15) SpawnCorpsesNearHive(tribal_chiefRanged, tribeSavageFaction, 1, hive);
-            }
-            if (Rand.Range(1, 100) <= 25 && (faction1 == tribeCivilFaction || faction2 == tribeCivilFaction))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeCivilPawnKinds.RandomElement(), tribeCivilFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeCivilPawnKinds.RandomElement(), tribeCivilFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(tribeCivilPawnKinds.RandomElement(), tribeCivilFaction, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 25 && (faction1 == outlanderRoughFaction || faction2 == outlanderRoughFaction))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(outlanderPawnKinds.RandomElement(), outlanderRoughFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(outlanderPawnKinds.RandomElement(), outlanderRoughFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(outlanderPawnKinds.RandomElement(), outlanderRoughFaction, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 25 && (faction1 == outlanderCivilFaction || faction2 == outlanderCivilFaction))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(outlanderPawnKinds.RandomElement(), outlanderCivilFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(outlanderPawnKinds.RandomElement(), outlanderCivilFaction, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(outlanderPawnKinds.RandomElement(), outlanderCivilFaction, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 30 && (faction1 == null))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.Drifter, null, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.Drifter, null, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.Drifter, null, Rand.Range(1, 6), hive);
-            }
-            if (Rand.Range(1, 100) <= 30 && (faction2 == null))
-            {
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.SpaceRefugee, null, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.SpaceRefugee, null, Rand.Range(1, 6), hive);
-                if (Rand.Range(1, 100) <= 50) SpawnCorpsesNearHive(RimWorld.PawnKindDefOf.SpaceRefugee, null, Rand.Range(1, 6), hive);
-            }
-        }
-        public static void SpawnRandomItems(Hive hive, List<ThingDef> thingDefs)
+            var mercenaryPawnKinds = PawnKinds(pk =>
+                pk.defName.StartsWith("Mercenary_") ||
+                pk.defName.StartsWith("Grenadier_"));
+
+            var tribeSavagePawnKinds = PawnKinds(pk =>
+                pk.defaultFactionDef?.defName == "TribeSavage");
+
+            var tribeRoughPawnKinds = PawnKinds(pk =>
+                pk.defaultFactionDef?.defName == "TribeRough");
+
+            var tribeCivilPawnKinds = PawnKinds(pk =>
+                pk.defaultFactionDef?.defName == "TribeCivil");
+
+            var outlanderPawnKinds = PawnKinds(pk =>
+                pk.defaultFactionDef?.defName?.StartsWith("Outlander") == true);
+
+            var mechanoidPawnKinds = PawnKinds(pk =>
+                pk.RaceProps?.IsMechanoid == true);
+
+            // Explicit special roles
+            PawnKindDef pirateBoss = DefDatabase<PawnKindDef>.GetNamedSilentFail("PirateBoss");
+            PawnKindDef tribalChiefMelee = DefDatabase<PawnKindDef>.GetNamedSilentFail("Tribal_ChiefMelee");
+            PawnKindDef tribalChiefRanged = DefDatabase<PawnKindDef>.GetNamedSilentFail("Tribal_ChiefRanged");
+
+            // --------------------------------------------------
+            // Choose two distinct factions (original intent)
+            // --------------------------------------------------
+
+            var possibleFactions = new List<Faction>
         {
-            if (hive == null) return;
+            null,
+            null,
+            Faction.OfAncients,
+            Faction.OfAncientsHostile,
+            mechanoidFaction,
+            pirateFaction,
+            pirateFaction,
+            tribeRoughFaction,
+            tribeSavageFaction,
+            tribeCivilFaction,
+            outlanderRoughFaction,
+            outlanderCivilFaction
+        };
 
-            ThingDef componentIndustrial = null;
-            ThingDef componentSpacer = null;
-            ThingDef gun_MachinePistol = null;
-            ThingDef gun_IncendiaryLauncher = null;
-            ThingDef gun_SmokeLauncher = null;
-            ThingDef gun_EMPLauncher = null;
-            ThingDef gun_BoltActionRifle = null;
-            ThingDef gun_PumpShotgun = null;
-            ThingDef gun_ChainShotgun = null;
-            ThingDef gun_HeavySMG = null;
-            ThingDef gun_LMG = null;
-            ThingDef gun_AssaultRifle = null;
-            ThingDef gun_SniperRifle = null;
-            ThingDef gun_Minigun = null;
-            ThingDef mechSerumHealer = null;
-            ThingDef mechSerumResurrector = null;
-            ThingDef techprofSubpersonaCore = null;
-            ThingDef thrumboHorn = null;
-            ThingDef elephantTusk = null;
+            Faction faction1 = possibleFactions.RandomElement();
+            possibleFactions.Remove(faction1);
+            Faction faction2 = possibleFactions.RandomElement();
 
-            ThingDef apparel_SmokepopBelt = null;
-            ThingDef apparel_SimpleHelmet = null;
-            ThingDef apparel_AdvancedHelmet = null;
-            ThingDef apparel_PowerArmorHelmet = null;
-            ThingDef apparel_PsychicFoilHelmet = null;
-            ThingDef apparel_FlakVest = null;
-            ThingDef apparel_FlakPants = null;
-            ThingDef apparel_FlakJacket = null;
-            ThingDef apparel_PowerArmor = null;
-            ThingDef apparel_ArmorRecon = null;
+            // --------------------------------------------------
+            // Ancients
+            // --------------------------------------------------
 
-            foreach (ThingDef thingDef in thingDefs)
+            TryAncients(hive, faction1, faction2, Faction.OfAncients);
+            TryAncients(hive, faction1, faction2, Faction.OfAncientsHostile);
+
+            // --------------------------------------------------
+            // Mechanoids
+            // --------------------------------------------------
+
+            TryFactionGroup(
+                hive,
+                mechanoidFaction,
+                mechanoidPawnKinds,
+                faction1,
+                faction2,
+                factionChance: 0.30f);
+
+            // --------------------------------------------------
+            // Pirates
+            // --------------------------------------------------
+
+            if (Rand.Chance(0.40f) && faction1 == pirateFaction)
             {
-                if (thingDef.defName == "ComponentIndustrial")
-                    componentIndustrial = thingDef;
-                else if (thingDef.defName == "ComponentSpacer")
-                    componentSpacer = thingDef;
-                else if (thingDef.defName == "Gun_MachinePistol")
-                    gun_MachinePistol = thingDef;
-                else if (thingDef.defName == "Gun_IncendiaryLauncher")
-                    gun_IncendiaryLauncher = thingDef;
-                else if (thingDef.defName == "Gun_SmokeLauncher")
-                    gun_SmokeLauncher = thingDef;
-                else if (thingDef.defName == "Gun_EMPLauncher")
-                    gun_EMPLauncher = thingDef;
-                else if (thingDef.defName == "Gun_BoltActionRifle")
-                    gun_BoltActionRifle = thingDef;
-                else if (thingDef.defName == "Gun_PumpShotgun")
-                    gun_PumpShotgun = thingDef;
-                else if (thingDef.defName == "Gun_ChainShotgun")
-                    gun_ChainShotgun = thingDef;
-                else if (thingDef.defName == "Gun_HeavySMG")
-                    gun_HeavySMG = thingDef;
-                else if (thingDef.defName == "Gun_LMG")
-                    gun_LMG = thingDef;
-                else if (thingDef.defName == "Gun_AssaultRifle")
-                    gun_AssaultRifle = thingDef;
-                else if (thingDef.defName == "Gun_SniperRifle")
-                    gun_SniperRifle = thingDef;
-                else if (thingDef.defName == "Gun_Minigun")
-                    gun_Minigun = thingDef;
-                else if (thingDef.defName == "MechSerumHealer")
-                    mechSerumHealer = thingDef;
-                else if (thingDef.defName == "MechSerumResurrector")
-                    mechSerumResurrector = thingDef;
-                else if (thingDef.defName == "TechprofSubpersonaCore")
-                    techprofSubpersonaCore = thingDef;
-                else if (thingDef.defName == "ThrumboHorn")
-                    thrumboHorn = thingDef;
-                else if (thingDef.defName == "ElephantTusk")
-                    elephantTusk = thingDef;
-                else if (thingDef.defName == "Apparel_SmokepopBelt")
-                    apparel_SmokepopBelt = thingDef;
-                else if (thingDef.defName == "Apparel_SimpleHelmet")
-                    apparel_SimpleHelmet = thingDef;
-                else if (thingDef.defName == "Apparel_AdvancedHelmet")
-                    apparel_AdvancedHelmet = thingDef;
-                else if (thingDef.defName == "Apparel_PowerArmorHelmet")
-                    apparel_PowerArmorHelmet = thingDef;
-                else if (thingDef.defName == "Apparel_PsychicFoilHelmet")
-                    apparel_PsychicFoilHelmet = thingDef;
-                else if (thingDef.defName == "Apparel_FlakVest")
-                    apparel_FlakVest = thingDef;
-                else if (thingDef.defName == "Apparel_FlakPants")
-                    apparel_FlakPants = thingDef;
-                else if (thingDef.defName == "Apparel_FlakJacket")
-                    apparel_FlakJacket = thingDef;
-                else if (thingDef.defName == "Apparel_PowerArmor")
-                    apparel_PowerArmor = thingDef;
-                else if (thingDef.defName == "Apparel_ArmorRecon")
-                    apparel_ArmorRecon = thingDef;
+                SpawnGroup(hive, pirateFaction, piratePawnKinds, 3, 0.5f);
+                TrySpawn(pirateBoss, pirateFaction, hive, 0.15f, IntRange.One);
             }
 
-            if (Rand.Range(1, 100) <= 40)
+            if (Rand.Chance(0.40f) && faction2 == pirateFaction)
             {
-                if (Rand.Range(1, 100) <= 8) SpawnItemsNearHive(elephantTusk, 1, hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(thrumboHorn, 1, hive);
-                else if (Rand.Range(1, 100) <= 3) SpawnItemsNearHive(RimWorld.ThingDefOf.AIPersonaCore, 1, hive);
-                else if (Rand.Range(1, 100) <= 3) SpawnItemsNearHive(techprofSubpersonaCore, 1, hive);
-                else if (Rand.Range(1, 100) <= 3) SpawnItemsNearHive(mechSerumResurrector, 1, hive);
-                else if (Rand.Range(1, 100) <= 3) SpawnItemsNearHive(mechSerumHealer, 1, hive);
+                SpawnGroup(hive, pirateFaction, mercenaryPawnKinds, 3, 0.5f);
             }
-            if (Rand.Range(1, 100) <= 40)
-            {
-                if (Rand.Range(1, 100) <= 12) SpawnItemsNearHive(gun_MachinePistol, 1, hive);
-                else if (Rand.Range(1, 100) <= 10) SpawnItemsNearHive(gun_PumpShotgun, 1, hive);
-                else if (Rand.Range(1, 100) <= 10) SpawnItemsNearHive(gun_BoltActionRifle, 1, hive);
-                else if (Rand.Range(1, 100) <= 10) SpawnItemsNearHive(gun_EMPLauncher, 1, hive);
-                else if (Rand.Range(1, 100) <= 10) SpawnItemsNearHive(gun_SmokeLauncher, 1, hive);
-                else if (Rand.Range(1, 100) <= 10) SpawnItemsNearHive(gun_IncendiaryLauncher, 1, hive);
-                else if (Rand.Range(1, 100) <= 8) SpawnItemsNearHive(gun_LMG, 1, hive);
-                else if (Rand.Range(1, 100) <= 8) SpawnItemsNearHive(gun_HeavySMG, 1, hive);
-                else if (Rand.Range(1, 100) <= 8) SpawnItemsNearHive(gun_ChainShotgun, 1, hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(gun_SniperRifle, 1, hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(gun_AssaultRifle, 1, hive);
-                else if (Rand.Range(1, 100) <= 3) SpawnItemsNearHive(gun_Minigun, 1, hive);
-            }
-            if (Rand.Range(1, 100) <= 40)
-            {
-                if (Rand.Range(1, 100) <= 15) SpawnItemsNearHive(RimWorld.ThingDefOf.Silver, Rand.Range(4, 8), hive);
-                else if (Rand.Range(1, 100) <= 15) SpawnItemsNearHive(RimWorld.ThingDefOf.Chemfuel, Rand.Range(4, 8), hive);
-                else if (Rand.Range(1, 100) <= 12) SpawnItemsNearHive(RimWorld.ThingDefOf.Plasteel, Rand.Range(2, 4), hive);
-                else if (Rand.Range(1, 100) <= 12) SpawnItemsNearHive(RimWorld.ThingDefOf.Uranium, Rand.Range(2, 4), hive);
-                else if (Rand.Range(1, 100) <= 12) SpawnItemsNearHive(RimWorld.ThingDefOf.Gold, Rand.Range(2, 4), hive);
-            }
-            if (Rand.Range(1, 100) <= 40)
-            {
-                if (Rand.Range(1, 100) <= 12) SpawnItemsNearHive(componentIndustrial, Rand.Range(2, 4), hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(componentSpacer, Rand.Range(1, 3), hive);
-            }
-            if (Rand.Range(1, 100) <= 40)
-            {
-                if (Rand.Range(1, 100) <= 8) SpawnItemsNearHive(RimWorld.ThingDefOf.Apparel_ShieldBelt, 1, hive);
-                else if (Rand.Range(1, 100) <= 8) SpawnItemsNearHive(apparel_SmokepopBelt, 1, hive);
-                else if (Rand.Range(1, 100) <= 8) SpawnItemsNearHive(apparel_SimpleHelmet, 1, hive);
-                else if (Rand.Range(1, 100) <= 8) SpawnItemsNearHive(apparel_PsychicFoilHelmet, 1, hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(apparel_AdvancedHelmet, 1, hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(apparel_ArmorRecon, 1, hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(apparel_FlakJacket, 1, hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(apparel_FlakPants, 1, hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(apparel_FlakVest, 1, hive);
-                else if (Rand.Range(1, 100) <= 3) SpawnItemsNearHive(apparel_PowerArmor, 1, hive);
-                else if (Rand.Range(1, 100) <= 3) SpawnItemsNearHive(apparel_PowerArmorHelmet, 1, hive);
-            }
-            if (Rand.Range(1, 100) <= 40)
-            {
-                if (Rand.Range(1, 100) <= 10) SpawnItemsNearHive(RimWorld.ThingDefOf.MedicineIndustrial, Rand.Range(2, 5), hive);
-                else if (Rand.Range(1, 100) <= 5) SpawnItemsNearHive(RimWorld.ThingDefOf.MedicineUltratech, Rand.Range(1, 3), hive);
-            }
+
+            // --------------------------------------------------
+            // Tribes / Outlanders
+            // --------------------------------------------------
+
+            TryFactionGroup(hive, tribeRoughFaction, tribeRoughPawnKinds, faction1, faction2, 0.25f);
+            TryFactionGroup(hive, tribeSavageFaction, tribeSavagePawnKinds, faction1, faction2, 0.25f, tribalChiefMelee, tribalChiefRanged);
+            TryFactionGroup(hive, tribeCivilFaction, tribeCivilPawnKinds, faction1, faction2, 0.25f);
+            TryFactionGroup(hive, outlanderRoughFaction, outlanderPawnKinds, faction1, faction2, 0.25f);
+            TryFactionGroup(hive, outlanderCivilFaction, outlanderPawnKinds, faction1, faction2, 0.25f);
+
+            // --------------------------------------------------
+            // Civilians / refugees
+            // --------------------------------------------------
+
+            if (Rand.Chance(0.30f) && faction1 == null)
+                SpawnGroup(hive, null, PawnKindDefOf.Drifter, 3, 0.5f);
+
+            if (Rand.Chance(0.30f) && faction2 == null)
+                SpawnGroup(hive, null, PawnKindDefOf.SpaceRefugee, 3, 0.5f);
         }
+
+
+        // =====================================================================
+        // Helpers
+        // =====================================================================
+
+        static Faction FactionByDef(string defName)
+            => Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == defName);
+
+        static List<PawnKindDef> PawnKinds(System.Func<PawnKindDef, bool> selector)
+            => DefDatabase<PawnKindDef>.AllDefsListForReading.Where(selector).ToList();
+
+        static void TryAncients(Hive hive, Faction f1, Faction f2, Faction ancients)
+        {
+            if (!Rand.Chance(0.15f) || (f1 != ancients && f2 != ancients))
+                return;
+
+            for (int i = 0; i < 3; i++)
+                TrySpawn(PawnKindDefOf.AncientSoldier, ancients, hive, 0.5f, new IntRange(1, 6));
+        }
+
+        static void TryFactionGroup(
+            Hive hive,
+            Faction faction,
+            List<PawnKindDef> pawnKinds,
+            Faction f1,
+            Faction f2,
+            float factionChance,
+            params PawnKindDef[] specialLeaders)
+        {
+            if (faction == null || pawnKinds.NullOrEmpty()) return;
+            if (!Rand.Chance(factionChance) || (f1 != faction && f2 != faction))
+                return;
+
+            SpawnGroup(hive, faction, pawnKinds, 3, 0.5f);
+
+            foreach (var leader in specialLeaders)
+                TrySpawn(leader, faction, hive, 0.15f, IntRange.One);
+        }
+
+        static void SpawnGroup(
+            Hive hive,
+            Faction faction,
+            List<PawnKindDef> pawnKinds,
+            int rolls,
+            float chancePerRoll)
+        {
+            for (int i = 0; i < rolls; i++)
+                TrySpawn(pawnKinds.RandomElement(), faction, hive, chancePerRoll, new IntRange(1, 6));
+        }
+
+        static void SpawnGroup(
+            Hive hive,
+            Faction faction,
+            PawnKindDef kind,
+            int rolls,
+            float chancePerRoll)
+        {
+            for (int i = 0; i < rolls; i++)
+                TrySpawn(kind, faction, hive, chancePerRoll, new IntRange(1, 6));
+        }
+
+        static void TrySpawn(
+            PawnKindDef kind,
+            Faction faction,
+            Hive hive,
+            float chance,
+            IntRange count)
+        {
+            if (kind == null || hive == null || !Rand.Chance(chance))
+                return;
+
+            SpawnCorpsesNearHive(kind, faction, count.RandomInRange, hive);
+        }
+
+
+
+        public class HiveLootEntry
+        {
+            public Func<ThingDef, bool> Selector;
+            public float Weight;
+            public IntRange CountRange = IntRange.One;
+        }
+
+        public static bool TrySpawnFromPool(Hive hive, IEnumerable<HiveLootEntry> entries, float rollChance)
+        {
+            if (hive == null || !Rand.Chance(rollChance))
+                return false;
+
+            var valid = new List<(ThingDef def, HiveLootEntry entry)>();
+
+            foreach (var entry in entries)
+            {
+                foreach (var def in DefDatabase<ThingDef>.AllDefs)
+                {
+                    if (entry.Selector(def))
+                        valid.Add((def, entry));
+                }
+            }
+
+            if (valid.Count == 0)
+                return false;
+
+            var chosen = valid.RandomElementByWeight(v => v.entry.Weight);
+            SpawnItemsNearHive(
+                chosen.def,
+                chosen.entry.CountRange.RandomInRange,
+                hive);
+
+            return true;
+        }
+
+
+        static readonly List<HiveLootEntry> WeaponLoot = new()
+{
+    new HiveLootEntry
+    {
+        Selector = def =>
+            def.IsWeapon &&
+            def.weaponTags?.Contains("Gun") == true,
+        Weight = 12f
+    },
+    new HiveLootEntry
+    {
+        Selector = def =>
+            def.IsWeapon &&
+            def.weaponTags?.Contains("IndustrialGunAdvanced") == true,
+        Weight = 6f
+    },
+    new HiveLootEntry
+    {
+        Selector = def =>
+            def.IsWeapon &&
+            def.weaponTags?.Contains("SpacerGun") == true,
+        Weight = 3f
+    },
+     new HiveLootEntry
+    {
+        Selector = def =>
+            def.IsWeapon &&
+            def.weaponTags?.Contains("Zal") == true,
+        Weight = 1f
+    }
+};
+
+        static readonly List<HiveLootEntry> ApparelLoot = new()
+{
+    new HiveLootEntry
+    {
+        Selector = def =>
+            def.IsApparel &&
+            def.apparel?.layers.Contains(ApparelLayerDefOf.Overhead) == true,
+        Weight = 8f
+    },
+    new HiveLootEntry
+    {
+        Selector = def =>
+            def.IsApparel &&
+            (def.tradeTags?.Contains("Armor") == true || def.tradeTags?.Contains("HiTechArmor") == true),
+        Weight = 5f
+    },
+    new HiveLootEntry
+    {
+        Selector = def =>
+            def.IsApparel &&
+            def.apparel?.layers.Contains(ApparelLayerDefOf.Overhead) == true &&
+            (def.tradeTags?.Contains("Armor") == true || def.tradeTags?.Contains("HiTechArmor") == true),
+        Weight = 5f
+    }
+};
+
+        static readonly List<HiveLootEntry> ResourceLoot = new()
+{
+    new HiveLootEntry
+    {
+        Selector = def =>
+            def.IsStuff && def.tradeTags?.Contains("LJO_JoyItem") == false &&
+            def.BaseMarketValue > 5f && def.techLevel < TechLevel.Archotech,
+        Weight = 15f,
+        CountRange = new IntRange(2, 5)
+    },
+     new HiveLootEntry
+    {
+        Selector = def =>
+            def.defName == "Silver",
+        Weight = 6f,
+        CountRange = new IntRange(3, 5)
+    },
+     new HiveLootEntry
+    {
+        Selector = def =>
+            def.defName == "Gold",
+        Weight = 3f,
+        CountRange = new IntRange(1, 3)
+    },
+};
+
+
+        static readonly List<HiveLootEntry> ExoticLoot = new()
+        {
+        new HiveLootEntry
+    {
+        Selector = def =>
+            def.tradeTags?.Contains("ExoticMisc") == true,
+        Weight = 5f,
+        CountRange = new IntRange(1, 2)
+    },
+    new HiveLootEntry
+    {
+        Selector = def =>
+            def.tradeTags?.Contains("Artifact") == true,
+        Weight = 1f,
+        CountRange = new IntRange(1, 2)
+    }
+        };
+
+        public static void SpawnRandomItems(Hive hive)
+        {
+            TrySpawnFromPool(hive, WeaponLoot, 0.40f);
+            TrySpawnFromPool(hive, ApparelLoot, 0.40f);
+            TrySpawnFromPool(hive, ResourceLoot, 0.40f);
+            TrySpawnFromPool(hive, ExoticLoot, 0.40f);
+        }
+
         public static void SpawnCorpsesNearHive(PawnKindDef pawnKindDef, Faction faction, int num, Hive hive)
         {
             if (pawnKindDef == null || hive == null) return;

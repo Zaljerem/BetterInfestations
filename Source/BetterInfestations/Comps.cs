@@ -1,13 +1,14 @@
 using RimWorld;
-using Verse;
 using System;
-using System.Reflection;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
+using System.Reflection;
+using UnityEngine;
+using Verse;
 using Verse.AI;
 using Verse.AI.Group;
 using Verse.Sound;
-using System.Diagnostics.Eventing.Reader;
 
 namespace BetterInfestations
 {
@@ -624,7 +625,7 @@ namespace BetterInfestations
                 {
                     while (SpawnedPawnsPoints(i) < BetterInfestationsMod.settings.initialPawnsPoints)
                     {
-                        if (!TrySpawnPawn(i, out Pawn _, RandomPawnKindDef(), BetterInfestationsMod.settings.newbornInsects)) break;
+                        if (!TrySpawnPawn(i, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects)) break;
                     }
                 }
             }
@@ -672,20 +673,19 @@ namespace BetterInfestations
             reassignPawnTick = Find.TickManager.TicksGame + 600;
         }
 
-        public IEnumerable<PawnKindDef> source;
+       
+        [Obsolete]
         public PawnKindDef RandomPawnKindDef()
         {
-
+            IEnumerable<PawnKindDef> source;
             source = new List<PawnKindDef> { RimWorld.PawnKindDefOf.Megascarab, RimWorld.PawnKindDefOf.Spelopede, RimWorld.PawnKindDefOf.Megaspider };
 
             if (ModsConfig.IsActive("zal.vfeinsectoid"))
             {
-                Random rand = new Random();
+                System.Random rand = new System.Random();
                 int VFEIChance = rand.Next(1, 101);
                 if (VFEIChance < 20)
                 {
-
-                    //source = new List<PawnKindDef> { PawnKindDefOf.VFEI_Insectoid_RoyalMegaspider, PawnKindDefOf.VFEI_Insectoid_Gigalocust, PawnKindDefOf.VFEI_Insectoid_Megapede };
 
                     ((List<PawnKindDef>)source).Add(PawnKindDefOf.VFEI_Insectoid_RoyalMegaspider);
                     ((List<PawnKindDef>)source).Add(PawnKindDefOf.VFEI_Insectoid_Gigalocust);
@@ -694,26 +694,50 @@ namespace BetterInfestations
                 }
             }
 
-            //if (ModsConfig.IsActive("zal.vaecaves"))
-            //{
-            //    Random rand2 = new Random();
-           //     int VAECChance = rand2.Next(1, 101);
-           //     if (VAECChance < 10)
-           //     {
-
-                    
-                    //((List<PawnKindDef>)source).Add(PawnKindDefOf.VAECaves_InsectoidHulk);
-          //          ((List<PawnKindDef>)source).Add(PawnKindDefOf.VAECaves_GiantSpider);
-           //         ((List<PawnKindDef>)source).Add(PawnKindDefOf.VAECaves_AncientGiantSpider);
-           //     }
-           // }
-
             if (source.TryRandomElement(out PawnKindDef result))
             {
                 return result;
             }
             return null;
         }
+
+        public PawnKindDef RandomWeightedPawnKindDef(float threatPoints = 0f)
+        {
+            var choices = new List<(PawnKindDef kind, float weight)>
+    {
+        (RimWorld.PawnKindDefOf.Megascarab, 1.0f),
+        (RimWorld.PawnKindDefOf.Spelopede,  1.0f),
+        (RimWorld.PawnKindDefOf.Megaspider, 1.0f)
+    };
+
+
+            if (ModsConfig.OdysseyActive)
+            {
+                choices.Add((PawnKindDefOf.Locust, 0.3f));
+                choices.Add((PawnKindDefOf.Larva, 0.3f));
+                //choices.Add((PawnKindDefOf.HiveQueen, 0.1f));
+            }
+
+            if (ModsConfig.IsActive("zal.vfeinsectoid"))
+            {
+                // Scale VFEI presence with threat if provided
+                float vfeiWeight = threatPoints > 0f
+            ? Mathf.Clamp01(threatPoints / 1200f) * 0.6f
+            : 0.2f; // fallback when threat not available
+                // Max ~60% of a vanilla insect's weight           
+
+                if (vfeiWeight > 0.01f)
+                {
+                    choices.Add((PawnKindDefOf.VFEI_Insectoid_RoyalMegaspider, vfeiWeight));
+                    choices.Add((PawnKindDefOf.VFEI_Insectoid_Gigalocust, vfeiWeight));
+                    choices.Add((PawnKindDefOf.VFEI_Insectoid_Megapede, vfeiWeight));
+                }
+            }
+
+            return choices.RandomElementByWeight(c => c.weight).kind;
+        }
+
+
         public bool TrySpawnPawn(int index, out Pawn pawn, PawnKindDef chosenKind, bool newbornPawn)
         {
             if (chosenKind == null || BetterInfestationsMod.settings == null)
@@ -774,7 +798,7 @@ namespace BetterInfestations
                 FilterOutUnspawnedPawns(i);
                 if (Find.TickManager.TicksGame >= nextPawnSpawnTick[i])
                 {
-                    if (canSpawnPawns && SpawnedPawnsPoints(i) < maxSpawnedPawnsPoints[i] && TrySpawnPawn(i, out Pawn pawn, RandomPawnKindDef(), BetterInfestationsMod.settings.newbornInsects) && pawn.caller != null)
+                    if (canSpawnPawns && SpawnedPawnsPoints(i) < maxSpawnedPawnsPoints[i] && TrySpawnPawn(i, out Pawn pawn, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects) && pawn.caller != null)
                     {
                         pawn.caller.DoCall();
                     }
@@ -937,7 +961,7 @@ namespace BetterInfestations
                 command_Action.icon = TexCommand.ReleaseAnimals;
                 command_Action.action = delegate
                 {
-                    TrySpawnPawn(0, out Pawn _, RandomPawnKindDef(), BetterInfestationsMod.settings.newbornInsects);
+                    TrySpawnPawn(0, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects);
                 };
                 yield return command_Action;
 
@@ -946,7 +970,7 @@ namespace BetterInfestations
                 command_Action.icon = TexCommand.ReleaseAnimals;
                 command_Action.action = delegate
                 {
-                    TrySpawnPawn(1, out Pawn _, RandomPawnKindDef(), BetterInfestationsMod.settings.newbornInsects);
+                    TrySpawnPawn(1, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects);
                 };
                 yield return command_Action;
 
@@ -955,7 +979,7 @@ namespace BetterInfestations
                 command_Action.icon = TexCommand.ReleaseAnimals;
                 command_Action.action = delegate
                 {
-                    TrySpawnPawn(2, out Pawn _, RandomPawnKindDef(), BetterInfestationsMod.settings.newbornInsects);
+                    TrySpawnPawn(2, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects);
                 };
                 yield return command_Action;
 
@@ -964,7 +988,7 @@ namespace BetterInfestations
                 command_Action.icon = TexCommand.ReleaseAnimals;
                 command_Action.action = delegate
                 {
-                    TrySpawnPawn(3, out Pawn _, RandomPawnKindDef(), BetterInfestationsMod.settings.newbornInsects);
+                    TrySpawnPawn(3, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects);
                 };
                 yield return command_Action;
             }

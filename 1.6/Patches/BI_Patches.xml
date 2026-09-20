@@ -16,7 +16,7 @@
   <Operation Class="PatchOperationReplace">
     <xpath>Defs/IncidentDef[defName="Infestation"]/baseChance</xpath>
     <value>
-       <baseChance>3.2</baseChance>
+       <baseChance>3.0</baseChance>
     </value>
   </Operation>
 
@@ -24,7 +24,7 @@
   <Operation Class="PatchOperationReplace">
     <xpath>Defs/IncidentDef[defName="Infestation"]/minRefireDays</xpath>
     <value>
-         <minRefireDays>12</minRefireDays>
+         <minRefireDays>15</minRefireDays>
     </value>
   </Operation>
 

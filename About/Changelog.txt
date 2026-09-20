@@ -9,3 +9,5 @@
 1.0.4 - 9/16/2025 - fix to raid generation
 
 1.0.5 - 9/18/2025 - set Queens to spawn female only
+
+1.0.6 - 1/7/2026 - tweaks and better threat scaling for world site generation, Odyssey insects added

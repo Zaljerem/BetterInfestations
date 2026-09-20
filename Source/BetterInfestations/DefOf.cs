@@ -10,6 +10,9 @@ namespace BetterInfestations
         public static ThingDef BI_Queen;
         public static ThingDef BI_Hive;
         public static ThingDef BI_TunnelHiveSpawner;
+
+        public static ThingDef GlowPod;
+        public static ThingDef InsectJelly;
     }
     [DefOf]
     public static class DutyDefOf
@@ -31,6 +34,7 @@ namespace BetterInfestations
     public static class PawnKindDefOf
     {
         public static PawnKindDef BI_Queen;
+
         [MayRequire("zal.vfeinsectoid")]
         public static PawnKindDef VFEI_Insectoid_RoyalMegaspider;
         [MayRequire("zal.vfeinsectoid")]
@@ -44,6 +48,16 @@ namespace BetterInfestations
         [MayRequire("zal.vaecaves")]
         public static PawnKindDef VAECaves_AncientGiantSpider;
 
+        public static PawnKindDef AncientSoldier;
+        public static PawnKindDef Drifter;
+        public static PawnKindDef SpaceRefugee;
+
+        [MayRequireOdyssey]
+        public static PawnKindDef Locust;
+        [MayRequireOdyssey]
+        public static PawnKindDef Larva;
+        [MayRequireOdyssey]
+        public static PawnKindDef HiveQueen;
     }
     [DefOf]
     public static class SoundDefOf

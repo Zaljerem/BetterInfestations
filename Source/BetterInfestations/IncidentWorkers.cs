@@ -5,8 +5,6 @@ using Verse;
 using Verse.AI.Group;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace BetterInfestations
 {
@@ -162,23 +160,9 @@ namespace BetterInfestations
                 }
             }
             return false;
-        }
-        //public static List<Pawn> GenerateInsects(int tile, float points)
-        // {
-        //    List<Pawn> list = new List<Pawn>();
-        //    for (int i = 0; i < 500; i++)
-        //    {
-        //        if (accumPoints >= points) break;
+        }        
 
-        //        PawnKindDef pawnKindDef = RandomPawnKindDef();
-        //        Pawn item = PawnGenerator.GeneratePawn(new PawnGenerationRequest(pawnKindDef, Faction.OfInsects, PawnGenerationContext.NonPlayer, tile));
-        //        list.Add(item);
-        //        accumPoints += pawnKindDef.combatPower;
-        //    }
-        //    return list;
-        // }
-
-        public static List<Pawn> GenerateInsects(int tile, float points)
+        public static List<Pawn> GenerateInsects(PlanetTile tile, float points) //changed from int
         {
             List<Pawn> list = new List<Pawn>();
             accumPoints = 0f; // reset for each raid
