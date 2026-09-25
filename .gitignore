@@ -4,4 +4,6 @@
 
 /Source/BetterInfestations/.vs
 /Source/BetterInfestations/obj
+/Source/BetterInfestations/Properties/Settings.settings
 /.gitignore
+/.git
