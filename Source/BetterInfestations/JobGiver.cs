@@ -108,7 +108,8 @@ namespace BetterInfestations
         public JobGiver_WanderHive()
         {
             wanderRadius = 8f;
-            ticksBetweenWandersRange = new IntRange(125, 200);
+            ticksBetweenWandersRange = new IntRange(120, 240);
+            locomotionUrgency = LocomotionUrgency.Amble;
         }
         protected override IntVec3 GetWanderRoot(Pawn pawn)
         {
@@ -217,6 +218,8 @@ namespace BetterInfestations
     {
         protected override Job TryGiveJob(Pawn pawn)
         {
+            //Log.Message($"Fight fire");
+
             if (pawn != null && pawn.Downed) return null;
             if (HiveUtility.JobsGivenRecentTick(pawn, "BeatFire")) return null;
 
@@ -258,34 +261,11 @@ namespace BetterInfestations
         public static Thing FindTarget(Pawn pawn)
         {
             Thing result = null;
-            Predicate<Thing> validator = delegate (Thing t)
-            {
-                Corpse c = t as Corpse;
-                if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
-                {
-                    if (HiveUtility.WithinHive(pawn, c as Thing, false) && pawn.CanReserve(c))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
 
+            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.corpseValidator(pawn, false, true));
             if (result != null) return result;
 
-            validator = delegate (Thing t)
-            {
-                if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
-                {
-                    if (HiveUtility.WithinHive(pawn, t, false) && t.def.defName != RimWorld.ThingDefOf.InsectJelly.defName && pawn.CanReserve(t))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            };
-            return GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableAlways), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            return GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableAlways), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.itemValidator(pawn, true, true));
         }
     }
     public class JobGiver_Gather : ThinkNode_JobGiver
@@ -301,8 +281,8 @@ namespace BetterInfestations
             //IntVec3 pos = CellFinder.RandomClosewalkCellNear(hive.Position, pawn.Map, 5);
             IntVec3 pos;
             CellFinder.TryFindRandomCellNear(hive.Position, pawn.Map, 5,
-    (IntVec3 x) => x.Standable(pawn.Map) && !x.Fogged(pawn.Map) && !x.IsForbidden(pawn) && pawn.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Some),
-    out pos);
+                (IntVec3 x) => x.Standable(pawn.Map) && !x.Fogged(pawn.Map) && !x.IsForbidden(pawn) && pawn.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Some),
+                out pos);
 
             if (pos == IntVec3.Invalid || !pawn.CanReserve(pos))
             {
@@ -333,51 +313,14 @@ namespace BetterInfestations
         public static Thing FindTarget(Pawn pawn)
         {
             Thing result = null;
-            Predicate<Thing> validator = delegate (Thing t)
-            {
-                Corpse c = t as Corpse;
-                if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
-                {
-                    if (!HiveUtility.WithinHive(pawn, c, true))
-                    {
-                        if ((c.InnerPawn.Faction == null || (c.InnerPawn.Faction != null && c.InnerPawn.Faction != pawn.Faction && c.InnerPawn.Faction.def.defName != "VFEI_Insect")) && pawn.CanReserve(c))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+
+            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.corpseValidator(pawn, true, false));
             if (result != null) return result;
 
-            validator = delegate (Thing t)
-            {
-                if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
-                {
-                    if (!HiveUtility.WithinHive(pawn, t, true) && pawn.CanReserve(t))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableAlways), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableAlways), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.itemValidator(pawn, true, false));
             if (result != null) return result;
 
-            validator = delegate (Thing t)
-            {
-                Pawn p = t as Pawn;
-                if (p != null && p.Downed && p.RaceProps.IsFlesh && !p.RaceProps.DeathActionWorker.DangerousInMelee && !p.IsBurning() && !p.Fogged())
-                {
-                    if (!HiveUtility.WithinHive(pawn, p, true) && pawn.CanReserve(p))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            };
-            return result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            return result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.pawnValidator(pawn));
         }
     }
     public class JobGiver_Patrol : ThinkNode_JobGiver
@@ -431,7 +374,7 @@ namespace BetterInfestations
                     return JobGiver_Hunt.ForceJob(pawn);
                 }
             }
-            if (!HiveUtility.JobsGivenRecentTick(pawn, "BI_HaulToCell"))
+            if (!HiveUtility.JobsGivenRecentTick(pawn, "HaulToCell"))
             {
                 target = JobGiver_Gather.FindTarget(pawn);
                 if (target != null)
@@ -440,13 +383,13 @@ namespace BetterInfestations
                 }
             }
 
-            pawn.mindState.nextMoveOrderIsWait = !pawn.mindState.nextMoveOrderIsWait;
-            if (pawn.mindState.nextMoveOrderIsWait)
-            {
-                Job job = JobMaker.MakeJob(RimWorld.JobDefOf.Wait_Wander);
-                job.expiryInterval = WaitTicks.RandomInRange;
-                return job;
-            }
+            //pawn.mindState.nextMoveOrderIsWait = !pawn.mindState.nextMoveOrderIsWait;
+            //if (pawn.mindState.nextMoveOrderIsWait)
+            //{
+            //    Job job = JobMaker.MakeJob(RimWorld.JobDefOf.Wait_Wander);
+            //    job.expiryInterval = WaitTicks.RandomInRange;
+            //    return job;
+            //}
 
             Predicate<IntVec3> validator = delegate (IntVec3 c)
             {
@@ -528,16 +471,8 @@ namespace BetterInfestations
             result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.BuildingArtificial), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
             if (result != null) return result;
 
-            validator = delegate (Thing t)
-            {
-                Pawn p = t as Pawn;
-                if (!p.DestroyedOrNull() && !p.IsBurning() && ((p.Faction != null && p.Faction != pawn.Faction && p.Faction.def.defName != "VFEI_Insect") || p.Faction == null) && !p.Downed && pawn.CanReserve(p) && !p.Fogged())
-                {
-                    return true;
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            // Hunt pawn, cleaned up
+            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.pawnValidator(pawn, true, false, false));
             if (result != null) return result;
 
             if (pawn.mindState != null && pawn.mindState.duty.def == DutyDefOf.BI_HiveHunters)

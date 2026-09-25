@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -52,7 +53,7 @@ namespace BetterInfestations
 
         public override void DeSpawn(DestroyMode mode = DestroyMode.Vanish)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 Lord lord = CompSpawnerPawns.Lord[i];
                 if (lord != null)
@@ -65,7 +66,7 @@ namespace BetterInfestations
 
         public override void Destroy(DestroyMode mode = DestroyMode.Vanish)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 Lord lord = CompSpawnerPawns.Lord[i];
                 if (lord != null)
@@ -117,7 +118,7 @@ namespace BetterInfestations
         {
             if (Spawned && (!dinfo.HasValue || dinfo.Value.Category != DamageInfo.SourceCategory.Collapse))
             {
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < 3; i++)
                 {
                     Lord lord = CompSpawnerPawns.Lord[i];
                     if (lord != null)
@@ -131,8 +132,8 @@ namespace BetterInfestations
 
         public override bool PreventPlayerSellingThingsNearby(out string reason)
         {
-            List<Pawn> pawns = HiveUtility.AllHivePawns(this);
-            if (pawns.Count > 0 && pawns.Any((Pawn p) => !p.Downed))
+            HashSet<Pawn> pawns = HiveUtility.AllHivePawns(this);
+            if (pawns.Count > 0 && pawns.Where(p => !p.Downed).Any())
             {
                 reason = def.label;
                 return true;

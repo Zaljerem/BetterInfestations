@@ -1,6 +1,7 @@
 using RimWorld;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Reflection;
 using Verse;
@@ -59,17 +60,11 @@ namespace BetterInfestations
         {
             if (!pawn.DestroyedOrNull() && pawn.Spawned)
             {
-                foreach (Thing thing in pawn.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
-                {
-                    Hive hive = thing as Hive;
-                    if (hive != null)
-                    {
-                        if (PawnFromHive(hive, pawn))
-                        {
-                            return hive;
-                        }
-                    }
-                }
+                HiveData_MapComponent mapHiveData = pawn.Map.GetComponent<HiveData_MapComponent>();
+                if (mapHiveData == null) return null;
+
+                mapHiveData.pawnToHiveDict.TryGetValue(pawn, out Hive hive);
+                return hive;
             }
             return null;
         }
@@ -85,7 +80,7 @@ namespace BetterInfestations
                     CompSpawnerPawns comp = hive.CompSpawnerPawns;
                     if (comp == null) return null;
 
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < 3; i++)
                     {
                         if (comp.Lord[i] == lord)
                         {
@@ -98,48 +93,44 @@ namespace BetterInfestations
         }
         public static bool PawnFromHive(Hive hive, Pawn pawn)
         {
-            if (!hive.DestroyedOrNull() && !pawn.DestroyedOrNull())
+            if (hive.DestroyedOrNull() || pawn.DestroyedOrNull()) return false;
+
+            for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
             {
-                foreach (Pawn p in AllHivePawns(hive))
+                if (hive.CompSpawnerPawns.spawnedPawns[i].Contains(pawn))
                 {
-                    if (p == pawn)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
+
             return false;
         }
         public static bool WithinHive(Pawn pawn, Thing thing, bool NearOtherHive)
         {
             if (pawn == null || thing == null) return false;
 
-            foreach (Thing t in pawn.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
+            HiveData_MapComponent mapHiveData = pawn.Map.GetComponent<HiveData_MapComponent>();
+
+            if (mapHiveData.pawnToHiveDict.TryGetValue(pawn, out Hive hive))
             {
-                Hive hive = t as Hive;
-                if (hive != null)
-                {
-                    if (PawnFromHive(hive, pawn) || NearOtherHive)
-                    {
-                        int dist = IntVec3Utility.ManhattanDistanceFlat(hive.Position, thing.Position);
-                        if (dist <= 8) return true;
-                    }
-                }
+                if (thing.Position.DistanceTo(hive.Position) <= 8) return true;
+            }
+            if (NearOtherHive)
+            {
+                if (mapHiveData.withinHiveGrid[thing.Position] == true) return true;
             }
             return false;
         }
-        public static List<Pawn> AllHivePawns(Hive hive)
+        public static HashSet<Pawn> AllHivePawns(Hive hive)
         {
-            if (hive != null)
+            if (hive == null) return null;
+
+            HashSet<Pawn> pawns = new HashSet<Pawn>();
+            for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
             {
-                List<Pawn> pawns = new List<Pawn>();
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
-                {
-                    pawns.AddRange(hive.CompSpawnerPawns.spawnedPawns[i]);
-                }
-                return pawns;
+                pawns.AddRange(hive.CompSpawnerPawns.spawnedPawns[i]);
             }
-            return null;
+            return pawns;
         }
         public static void CallReinforcements(Pawn pawn, Thing thing)
         {
@@ -165,17 +156,14 @@ namespace BetterInfestations
         }
         public static IntVec3 GetPatrolSpot(Pawn pawn, Hive hive, out LocomotionUrgency locomotionUrgency)
         {
-            if (pawn != null && hive != null)
+            if (!pawn.DestroyedOrNull() && !hive.DestroyedOrNull())
             {
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
                 {
-                    foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
+                    if (hive.CompSpawnerPawns.spawnedPawns[i].Contains(pawn))
                     {
-                        if (p == pawn)
-                        {
-                            locomotionUrgency = hive.CompSpawnerPawns.patrolLocomotion[i];
-                            return hive.CompSpawnerPawns.patrolLoc[i];
-                        }
+                        locomotionUrgency = hive.CompSpawnerPawns.patrolLocomotion[i];
+                        return hive.CompSpawnerPawns.patrolLoc[i];
                     }
                 }
             }
@@ -186,16 +174,13 @@ namespace BetterInfestations
         {
             if (pawn != null && hive != null)
             {
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
                 {
-                    foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
+                    if (hive.CompSpawnerPawns.spawnedPawns[i].Contains(pawn))
                     {
-                        if (p == pawn)
-                        {
-                            hive.CompSpawnerPawns.patrolLoc[i] = cell;
-                            hive.CompSpawnerPawns.patrolLocomotion[i] = locomotionUrgency;
-                            return;
-                        }
+                        hive.CompSpawnerPawns.patrolLoc[i] = cell;
+                        hive.CompSpawnerPawns.patrolLocomotion[i] = locomotionUrgency;
+                        return;
                     }
                 }
             }
@@ -204,7 +189,7 @@ namespace BetterInfestations
         {
             if (pawn != null && hive != null)
             {
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
@@ -218,7 +203,7 @@ namespace BetterInfestations
         {
             if (pawn != null && hive != null)
             {
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
@@ -236,7 +221,7 @@ namespace BetterInfestations
             if (pawn != null && hive != null)
             {
                 float points = 0;
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
@@ -252,7 +237,8 @@ namespace BetterInfestations
         }
         public static IntVec3 GetColonyStockpileSpot(Map map)
         {
-         
+            // not implemented
+
             return IntVec3.Invalid;
         }
         public static IntVec3 FindPathToPrey(Pawn pawn)
@@ -260,46 +246,34 @@ namespace BetterInfestations
             if (pawn != null && pawn.Downed) return IntVec3.Invalid;
             List<Thing> targetList = new List<Thing>();
 
-            foreach (Thing t in pawn.Map.listerThings.AllThings)
+            foreach (Thing t in pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree))
             {
-                if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
-                {
-                    targetList.Add(t);
-                }
-                Pawn p = t as Pawn;
-                if (p != null && (p.Faction == null || (p.Faction != null && p.Faction != pawn.Faction && p.Faction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
-                {
-                    targetList.Add(t);
-                }
-                Corpse c = t as Corpse;
-                if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
-                {
-                    if (c.InnerPawn.Faction == null || (c.InnerPawn.Faction != null && c.InnerPawn.Faction != pawn.Faction && c.InnerPawn.Faction.def.defName != "VFEI_Insect"))
-                    {
-                        targetList.Add(t);
-                    }
-                }
+                if (ValidatorUtility.itemValidator(pawn, true, false)(t)) targetList.Add(t);
+            }
+            foreach (Pawn p in pawn.Map.mapPawns.AllPawnsSpawned.ToList())
+            {
+                if (ValidatorUtility.pawnValidator(pawn, true, false, false)(p)) targetList.Add(p);
+            }
+            foreach (Corpse c in pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Corpse))
+            {
+                if (ValidatorUtility.corpseValidator(pawn, true, false)(c)) targetList.Add(c);
             }
 
             if (targetList.NullOrEmpty()) return IntVec3.Invalid;
 
             Thing result = null;
-            Predicate<Thing> validator = delegate (Thing t)
-            {
-                if (!WithinHive(pawn, t, true) && pawn.CanReserve(t))
-                {
-                    return true;
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, targetList, PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassAllDestroyableThings, Danger.Deadly, false), 9999, validator);
+
+            //Log.Message($"Finding thing in list of {targetList.Count}");
+            result = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, targetList, PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassAllDestroyableThings, Danger.Deadly, false), pawn.Map.Size.LengthHorizontal);
             if (result == null) return IntVec3.Invalid;
 
+            //Log.Message($"Finding path to {result.ThingID}");
             using (PawnPath pawnPath = pawn.Map.pathFinder.FindPathNow(start: pawn.Position, target: result.Position, traverseParms: TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassAllDestroyableThings, false), peMode: PathEndMode.OnCell))
             {
                 List<IntVec3> cells = pawnPath.NodesReversed;
                 if (!cells.NullOrEmpty())
                 {
+                    //Log.Message(cells.Count);
                     foreach (IntVec3 cell in cells)
                     {
                         if (IntVec3Utility.ManhattanDistanceFlat(pawn.Position, cell) <= 24)
@@ -309,6 +283,7 @@ namespace BetterInfestations
                     }
                 }
             }
+            //Log.Message($"No path found!");
 
             return IntVec3.Invalid;
         }
@@ -338,7 +313,7 @@ namespace BetterInfestations
                 Hive hive = GetHive(pawn);
                 if (hive == null) return false;
 
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {

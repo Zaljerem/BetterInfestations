@@ -9,14 +9,6 @@ namespace BetterInfestations
 {
     public class SymbolResolver_Infestation : SymbolResolver
     {
-
-        public static readonly SimpleCurve PointsFactorCurve = new SimpleCurve
-    {
-       new CurvePoint(0f, 0.7f),
-       new CurvePoint(2000f, 0.55f),
-       new CurvePoint(5000f, 0.45f)
-    };
-
         public override void Resolve(ResolveParams rp)
         {
             if (BetterInfestationsMod.settings == null)
@@ -24,31 +16,17 @@ namespace BetterInfestations
 
             Map map = BaseGen.globalSettings.map;
 
-            //float baseThreat = StorytellerUtility.DefaultThreatPointsNow(map);
             float baseThreat = StorytellerUtility.DefaultSiteThreatPointsNow();
 
-            Log.Message($"[BI] Base threat points: {baseThreat}");
-
-            float curvedThreat = baseThreat * PointsFactorCurve.Evaluate(baseThreat);
-
-            Log.Message($"[BI] Curved threat points: {curvedThreat}");
-
-            float threatScale = Find.Storyteller.difficulty.threatScale;
-
-            Log.Message($"[BI] Threat scale: {threatScale}");
-
-            float finalThreat = curvedThreat * threatScale;
-
-            Log.Message($"[BI] FINAL threat points: {finalThreat}");
-
-            float threatPoints = finalThreat;            
+            float threatPoints = InfestationUtility.CalculateThreat(baseThreat);
+       
 
             // Determine scale
-            int hiveCount = CalculateHiveCount(threatPoints);
-            int pawnsPerHive = CalculatePawnsPerHive(threatPoints, hiveCount);
+            int hiveCount = InfestationUtility.CalculateHiveCount(threatPoints);
+            int pawnsPerHive = InfestationUtility.CalculatePawnsPerHive(threatPoints, hiveCount);
 
-            Log.Message($"[BI] Hives: {hiveCount}");
-            Log.Message($"[BI] Pawns per hive: {pawnsPerHive}");
+            //Log.Message($"[BI] Hives: {hiveCount}");
+            //Log.Message($"[BI] Pawns per hive: {pawnsPerHive}");
 
             if (!TryFindRootCell(map, out IntVec3 rootCell))
                 return;
@@ -79,37 +57,20 @@ namespace BetterInfestations
 
             HiveUtility.SpawnRandomCorpses(rootHive);
 
-            if (finalThreat > 1000f)
+            if (threatPoints > 1000f)
             {
-                Log.Message($"[BI] Threat points > 1000, bonus loot generated");
+                //Log.Message($"[BI] Threat points > 1000, bonus loot generated");
                 HiveUtility.SpawnRandomItems(rootHive);
             }
         }
 
         #region Scaling
 
-        private int CalculateHiveCount(float threatPoints)
-        {
-            
-            int baseHives = Mathf.Clamp(
-                Mathf.RoundToInt(threatPoints / 220f),
-                1,
-                BetterInfestationsMod.settings.maxHivesPerMap
-            );
+        // moved to InfestationUtility
+        // private int CalculateHiveCount(float threatPoints)
 
-            return Rand.RangeInclusive(baseHives, baseHives + 1);
-        }
-
-        private int CalculatePawnsPerHive(float threatPoints, float hiveCount)
-        {
-
-            float pawnPointsPerHive = threatPoints / hiveCount;
-
-            int pawnCount = Mathf.RoundToInt(pawnPointsPerHive / 40f);
-            pawnCount = Mathf.Clamp(pawnCount, 3, 15);
-            return pawnCount;
-
-        }
+        // moved to InfestationUtility
+        // private int CalculatePawnsPerHive(float threatPoints, float hiveCount)
 
         //private float QueenChance(float threatPoints)
         // {
