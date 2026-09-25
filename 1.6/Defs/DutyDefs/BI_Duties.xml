@@ -13,7 +13,7 @@
         <li Class="BetterInfestations.ThinkNode_PerTick">
           <ticks>60</ticks>
           <subNodes>
-            <!-- <li Class="BetterInfestations.JobGiver_FightFire" /> -->
+            <li Class="BetterInfestations.JobGiver_FightFire" />
             <li Class="BetterInfestations.JobGiver_Hunt" />
             <li Class="BetterInfestations.JobGiver_Gather" />
             <li Class="BetterInfestations.JobGiver_Butcher" />
@@ -81,12 +81,12 @@
     <defName>BI_HiveHunters</defName>
     <thinkNode Class="ThinkNode_Priority">
       <subNodes>
-        <!-- <li Class="BetterInfestations.ThinkNode_PerTick">
+        <li Class="BetterInfestations.ThinkNode_PerTick">
           <ticks>60</ticks>
           <subNodes>
             <li Class="BetterInfestations.JobGiver_FightFire" />
           </subNodes>
-        </li> -->
+        </li>
         <li Class="ThinkNode_Tagger">
           <tagToGive>SatisfyingNeeds</tagToGive>
           <subNodes>

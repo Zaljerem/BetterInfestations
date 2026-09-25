@@ -261,34 +261,11 @@ namespace BetterInfestations
         public static Thing FindTarget(Pawn pawn)
         {
             Thing result = null;
-            Predicate<Thing> validator = delegate (Thing t)
-            {
-                Corpse c = t as Corpse;
-                if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
-                {
-                    if (HiveUtility.WithinHive(pawn, c, true) && pawn.CanReserve(c))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
 
+            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.corpseValidator(pawn, false, true));
             if (result != null) return result;
 
-            validator = delegate (Thing t)
-            {
-                if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
-                {
-                    if (t.def != RimWorld.ThingDefOf.InsectJelly && HiveUtility.WithinHive(pawn, t, true) && pawn.CanReserve(t))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            };
-            return GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableAlways), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            return GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableAlways), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.itemValidator(pawn, true, true));
         }
     }
     public class JobGiver_Gather : ThinkNode_JobGiver
@@ -336,60 +313,14 @@ namespace BetterInfestations
         public static Thing FindTarget(Pawn pawn)
         {
             Thing result = null;
-            Faction targetFaction;
 
-            Predicate<Thing> validator = delegate (Thing t)
-            {
-                if (t.def == RimWorld.ThingDefOf.InsectJelly) return false;
-
-                Corpse c = t as Corpse;
-                if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
-                {
-                    if (!HiveUtility.WithinHive(pawn, c, true))
-                    {
-                        targetFaction = c.InnerPawn.Faction;
-                        if ((targetFaction == null || (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect")) && pawn.CanReserve(c))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.corpseValidator(pawn, true, false));
             if (result != null) return result;
 
-            validator = delegate (Thing t)
-            {
-                if (t.def == RimWorld.ThingDefOf.InsectJelly) return false;
-
-                if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
-                {
-                    if (!HiveUtility.WithinHive(pawn, t, true) && pawn.CanReserve(t))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableAlways), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableAlways), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.itemValidator(pawn, true, false));
             if (result != null) return result;
 
-            validator = delegate (Thing t)
-            {
-                if (t.def == RimWorld.ThingDefOf.InsectJelly) return false;
-
-                Pawn p = t as Pawn;
-                if (p != null && p.Downed && p.RaceProps.IsFlesh && !p.RaceProps.DeathActionWorker.DangerousInMelee && !p.IsBurning() && !p.Fogged())
-                {
-                    if (!HiveUtility.WithinHive(pawn, p, true) && pawn.CanReserve(p))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            };
-            return result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            return result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.pawnValidator(pawn));
         }
     }
     public class JobGiver_Patrol : ThinkNode_JobGiver

@@ -22,15 +22,7 @@ namespace BetterInfestations
             {
                 return ThinkResult.NoJob;
             }
-            //Log.Message($"Pawn {pawn.ThingID} ticked on {Find.TickManager.TicksGame}, from {GetLastTryTick(pawn)}. Interval {ticks}, Delta {Find.TickManager.TicksGame - GetLastTryTick(pawn)}");
             SetLastTryTick(pawn, Find.TickManager.TicksGame);
-
-            //if (Find.TickManager.TicksGame < savedTick)
-            //{
-            //    return ThinkResult.NoJob;
-            //}
-            //savedTick = Find.TickManager.TicksGame + ticks;
-            //pawn.timetable.times.
 
             return base.TryIssueJobPackage(pawn, jobParams);
         }
@@ -39,7 +31,6 @@ namespace BetterInfestations
         {
             ThinkNode_PerTick obj = (ThinkNode_PerTick)base.DeepCopy(resolve);
             obj.ticks = ticks;
-            //obj.savedTick = savedTick;
             return obj;
         }
 

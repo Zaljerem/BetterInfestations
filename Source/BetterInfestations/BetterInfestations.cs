@@ -14,7 +14,6 @@ namespace BetterInfestations
     {
         public bool infestationsAllowed = true;
         public bool raidsAllowed = true;
-        public bool initialHunterSpawnsAllowed = false;
         public bool swarmingHordeEventAllowed = true;
         public bool queensAllowed = true;
         public bool newbornInsects = false;
@@ -44,7 +43,6 @@ namespace BetterInfestations
 
             Scribe_Values.Look(ref infestationsAllowed, "infestationsAllowed", true);
             Scribe_Values.Look(ref raidsAllowed, "raidsAllowed", true);
-            Scribe_Values.Look(ref initialHunterSpawnsAllowed, "initialHunterSpawnsAllowed", false);
             Scribe_Values.Look(ref swarmingHordeEventAllowed, "swarmingHordeEventAllowed", true);
             Scribe_Values.Look(ref queensAllowed, "queensAllowed", true);
             Scribe_Values.Look(ref newbornInsects, "newbornInsects", false);
@@ -86,12 +84,12 @@ namespace BetterInfestations
         }
         static void EasyDefaults()
         {
-            settings.initialHunterSpawnsAllowed = false;
             settings.queensAllowed = false;
             settings.newbornInsects = true;
             settings.notificationInf = true;
             settings.maxHivesPerMap = 15;
-            settings.initialPawnsPoints = 200f;
+            settings.hiveLevel = 0;
+            settings.initialPawnsPoints = 150f;
             settings.minSpawnInDays[0] = 1.5f;
             settings.maxSpawnInDays[0] = 2.25f;
             settings.minSpawnInDays[1] = 1.8f;
@@ -106,12 +104,12 @@ namespace BetterInfestations
         }
         static void NormalDefaults()
         {
-            settings.initialHunterSpawnsAllowed = false;
             settings.queensAllowed = true;
             settings.newbornInsects = false;
             settings.notificationInf = false;
             settings.maxHivesPerMap = 20;
-            settings.initialPawnsPoints = 350f;
+            settings.hiveLevel = 0;
+            settings.initialPawnsPoints = 200f;
             settings.minSpawnInDays[0] = 0.75f;
             settings.maxSpawnInDays[0] = 1.25f;
             settings.minSpawnInDays[1] = 0.85f;
@@ -126,12 +124,12 @@ namespace BetterInfestations
         }
         static void HardDefaults()
         {
-            settings.initialHunterSpawnsAllowed = false;
             settings.queensAllowed = true;
             settings.newbornInsects = false;
             settings.notificationInf = false;
             settings.maxHivesPerMap = 25;
-            settings.initialPawnsPoints = 500f;
+            settings.hiveLevel = 1;
+            settings.initialPawnsPoints = 200f;
             settings.minSpawnInDays[0] = 0.5f;
             settings.maxSpawnInDays[0] = 0.9f;
             settings.minSpawnInDays[1] = 0.65f;
@@ -146,12 +144,12 @@ namespace BetterInfestations
         }
         static void NightmareDefaults()
         {
-            settings.initialHunterSpawnsAllowed = true;
             settings.queensAllowed = true;
             settings.newbornInsects = false;
             settings.notificationInf = false;
             settings.maxHivesPerMap = 30;
-            settings.initialPawnsPoints = 650f;
+            settings.hiveLevel = 2;
+            settings.initialPawnsPoints = 300f;
             settings.minSpawnInDays[0] = 0.35f;
             settings.maxSpawnInDays[0] = 0.75f;
             settings.minSpawnInDays[1] = 0.45f;
@@ -291,16 +289,6 @@ namespace BetterInfestations
             Widgets.Label(labelRect15, "Hive settings");
 
             y += 32f;
-            Rect checkboxRect6 = new Rect(x + 8f, y, width, height);
-            Vector2 checkboxVec2_6 = new Vector2(checkboxRect6.x, checkboxRect6.y);
-            Widgets.Checkbox(checkboxVec2_6, ref settings.initialHunterSpawnsAllowed);
-            GUI.color = darkerWhite;
-            Rect labelRect14 = new Rect(x + 40f, y, width, height);
-            Widgets.Label(labelRect14, "Spawn initial hunters");
-            GUI.color = Color.white;
-            TooltipHandler.TipRegionByKey(labelRect14, "BI_SpawnInitialHuntersTip");
-
-            y += 32f;
             Rect checkboxRect1 = new Rect(x + 8f, y, width, height);
             Vector2 checkboxVec2_1 = new Vector2(checkboxRect1.x, checkboxRect1.y);
             Widgets.Checkbox(checkboxVec2_1, ref settings.queensAllowed);
@@ -323,14 +311,16 @@ namespace BetterInfestations
             y += 48f;
             Rect sliderRect13 = new Rect(x + 8f, y, width, height);
             settings.maxHivesPerMap = (int)Widgets.HorizontalSlider(sliderRect13, settings.maxHivesPerMap, 1f, 50f, false, null, "Maximum hives per map", settings.maxHivesPerMap.ToString(), 1f);
+            TooltipHandler.TipRegionByKey(sliderRect13, "BI_HiveLimitTip");
 
             y += 32f;
             Rect sliderRect16 = new Rect(x + 8f, y, width - 4f, height);
-            settings.hiveLevel = (int)Widgets.HorizontalSlider(sliderRect16, settings.hiveLevel, 1f, 3f, false, null, "Initial number of hunting parties", settings.hiveLevel.ToString(), 1f);
+            settings.hiveLevel = (int)Widgets.HorizontalSlider(sliderRect16, settings.hiveLevel, 0f, 2f, false, null, "Initial number of hunting parties", settings.hiveLevel.ToString(), 1f);
 
             y += 32f;
             Rect sliderRect14 = new Rect(x + 8f, y, width - 4f, height);
-            settings.initialPawnsPoints = (int)Widgets.HorizontalSlider(sliderRect14, settings.initialPawnsPoints, 150f, 1000f, false, null, "Initial spawn points", settings.initialPawnsPoints.ToString(), 50f);
+            settings.initialPawnsPoints = (int)Widgets.HorizontalSlider(sliderRect14, settings.initialPawnsPoints, 150f, 400f, false, null, "Initial spawn points per group", settings.initialPawnsPoints.ToString(), 50f);
+            TooltipHandler.TipRegionByKey(sliderRect14, "BI_InitialScoreTip");
 
             //Right side
             x = outRect.position.x + 432f;

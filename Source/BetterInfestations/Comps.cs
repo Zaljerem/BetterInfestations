@@ -638,33 +638,23 @@ namespace BetterInfestations
         {
             if (BetterInfestationsMod.settings == null) return;
 
-
-            float baseThreat = StorytellerUtility.DefaultThreatPointsNow(parent.Map);
-            float threatScore = InfestationUtility.CalculateThreat(baseThreat);
-
             float initialPawnsPoints = BetterInfestationsMod.settings.initialPawnsPoints;
-            Log.Message($"initialPawnsPoints = {initialPawnsPoints}, threatScore = {threatScore}");
 
             // maxSpawnedPawnsPoints will progress over time
-            maxSpawnedPawnsPoints[0] = initialPawnsPoints;
-            maxSpawnedPawnsPoints[1] = initialPawnsPoints;
-            if (BetterInfestationsMod.settings.hiveLevel > 1)
-            {
-                maxSpawnedPawnsPoints[2] = initialPawnsPoints;
-            }
+            maxSpawnedPawnsPoints[0] = Math.Min(400f, initialPawnsPoints);
+            if (BetterInfestationsMod.settings.hiveLevel > 0) maxSpawnedPawnsPoints[1] = Math.Min(400f, initialPawnsPoints);
+            if (BetterInfestationsMod.settings.hiveLevel > 1) maxSpawnedPawnsPoints[2] = Math.Min(400f, initialPawnsPoints);
 
             for (int i = 0; i < 3; i++)
             {
                 if (maxSpawnedPawnsPoints[i] == -1) continue;
 
-                if (i == 0 || (i > 0 && BetterInfestationsMod.settings.initialHunterSpawnsAllowed))
+                while (SpawnedPawnsPoints(i) < maxSpawnedPawnsPoints[i])
                 {
-                    while (SpawnedPawnsPoints(i) < initialPawnsPoints)
-                    {
-                        if (!TrySpawnPawn(i, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects)) break;
-                    }
+                    if (!TrySpawnPawn(i, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects)) break;
                 }
             }
+            Log.Message($"Initial pawn points = {SpawnedPawnsPoints(0) + SpawnedPawnsPoints(1) + SpawnedPawnsPoints(2)}");
             CalculateNextPawnSpawnTick(0);
         }
         private void CalculateNextPawnSpawnTick(int index)
@@ -808,8 +798,6 @@ namespace BetterInfestations
             }
 
             // Total strength check if the number of hives is more than half
-            //if (parent.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive).Count >= 0.5 * BetterInfestationsMod.settings.maxHivesPerMap)
-            //{
             float totalPower = 0f;
             int validPawnCount = 0;
             foreach (Pawn p in parent.Map.mapPawns.SpawnedPawnsInFaction(Faction.OfInsects))
@@ -822,12 +810,12 @@ namespace BetterInfestations
             }
 
             Log.Message($"Total power = {totalPower} for {validPawnCount} pawns");
-            if (totalPower > Math.Max(BetterInfestationsMod.settings.maxHivesPerMap * 1000f, 10000f))
+            //Log.Message($"{Math.Max(BetterInfestationsMod.settings.maxHivesPerMap * 1000f, 10000f) * (1.0f + (Find.Storyteller.difficulty.threatScale - 1.0f) / 6f)}");
+            if (totalPower > Math.Max(BetterInfestationsMod.settings.maxHivesPerMap * 1000f, 10000f) * (1.0f + (Find.Storyteller.difficulty.threatScale - 1.0f) / 6f))
             {
                 pawn = null;
                 return false;
             }
-            //}
 
             if (!canSpawnPawns) newbornPawn = false;
             Hive hive = parent as Hive;
@@ -888,16 +876,16 @@ namespace BetterInfestations
                 {
                     CalculateNextPawnSpawnTick(i);
                 }
-                //FilterOutUnspawnedPawns(i); // performance heavy!
                 if (Find.TickManager.TicksGame >= nextPawnSpawnTick[i])
                 {
-                    if (TotalStrength() > InfestationUtility.CalculateHiveTimeFactor(parent.TickSpawned.TicksToDays()) * 1200f)
+                    if (TotalStrength() > InfestationUtility.CalculateHiveTimeFactor((Find.TickManager.TicksSinceSettle - parent.TickSpawned).TicksToDays()) * 1200f)
                     {
-                        //Log.Message($"Total strength of {parent.ThingID} is {TotalStrength()}, greater than 1200f!");
+                        Log.Message($"Total strength of {parent.ThingID} is {TotalStrength()}, greater than {InfestationUtility.CalculateHiveTimeFactor((Find.TickManager.TicksSinceSettle - parent.TickSpawned).TicksToDays()) * 1200f}!");
+                        CalculateNextPawnSpawnTick(i);
                         return;
                     }
 
-                    //Log.Message($"Checking that {SpawnedPawnsPoints(i)} < {maxSpawnedPawnsPoints[i]}");
+                    // Try spawn insect
                     if (canSpawnPawns && SpawnedPawnsPoints(i) < maxSpawnedPawnsPoints[i])
                     {
                         //Log.Message($"Trying to spawn pawn!");
@@ -906,7 +894,9 @@ namespace BetterInfestations
                             pawn.caller.DoCall();
                         }
                     }
-                    if (i == 0 && canSpawnPawns && !queenSpawned && BetterInfestationsMod.settings.queensAllowed && Rand.Range(1, 100) <= 30 && TotalStrength() >= 1000)
+
+                    // Try spawn queen
+                    if (i == 0 && canSpawnPawns && !queenSpawned && BetterInfestationsMod.settings.queensAllowed && Rand.Range(1, 100) <= 30 && TotalStrength() >= 900)
                     {
                         if (TrySpawnPawn(i, out Pawn q, PawnKindDefOf.BI_Queen, BetterInfestationsMod.settings.newbornInsects) && q.caller != null)
                         {
@@ -982,7 +972,23 @@ namespace BetterInfestations
                                 patrolLoc[index] = pos;
                                 patrolLocomotion[index] = LocomotionUrgency.Jog;
                                 waitForOrders[index] = true;
-                                waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                                waitTicks[index] = Find.TickManager.TicksGame + 1200;
+                                return;
+                            }
+                            else
+                            {
+                                // If no prey, patrol randomly
+                                if (CellFinder.TryFindRandomReachableNearbyCell(pawn.Position, pawn.Map, 15f, TraverseMode.PassDoors, (c => c.Standable(pawn.Map)), null, out pos))
+                                {
+                                    patrolLoc[index] = pos;
+                                }
+                                else
+                                {
+                                    patrolLoc[index] = parent.Position;
+                                }
+                                patrolLocomotion[index] = LocomotionUrgency.Walk;
+                                waitForOrders[index] = true;
+                                waitTicks[index] = Find.TickManager.TicksGame + 1200;
                                 return;
                             }
                             //}
@@ -1002,7 +1008,7 @@ namespace BetterInfestations
                             if (!asleep && !atWork)
                             {
                                 // Waits for group to regroup if a pawn is behind and not sleeping or busy
-                                waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                                waitTicks[index] = Find.TickManager.TicksGame + 1200;
                                 return;
                             }
                         }
@@ -1032,7 +1038,7 @@ namespace BetterInfestations
                                     patrolLoc[index] = pos;
                                     patrolLocomotion[index] = LocomotionUrgency.Walk;
                                     waitForOrders[index] = true;
-                                    waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                                    waitTicks[index] = Find.TickManager.TicksGame + 1200;
                                     return;
                                 }
                             }
@@ -1045,7 +1051,23 @@ namespace BetterInfestations
                                     patrolLoc[index] = pos;
                                     patrolLocomotion[index] = LocomotionUrgency.Walk;
                                     waitForOrders[index] = true;
-                                    waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                                    waitTicks[index] = Find.TickManager.TicksGame + 1200;
+                                    return;
+                                }
+                                else
+                                {
+                                    // If no prey, patrol randomly
+                                    if (CellFinder.TryFindRandomReachableNearbyCell(pawn.Position, pawn.Map, 15f, TraverseMode.PassDoors, (c => c.Standable(pawn.Map)), null, out pos))
+                                    {
+                                        patrolLoc[index] = pos;
+                                    }
+                                    else
+                                    {
+                                        patrolLoc[index] = parent.Position;
+                                    }
+                                    patrolLocomotion[index] = LocomotionUrgency.Walk;
+                                    waitForOrders[index] = true;
+                                    waitTicks[index] = Find.TickManager.TicksGame + 1200;
                                     return;
                                 }
                             }

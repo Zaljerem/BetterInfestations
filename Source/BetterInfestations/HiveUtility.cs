@@ -117,11 +117,7 @@ namespace BetterInfestations
             }
             if (NearOtherHive)
             {
-                if (mapHiveData.withinHiveGrid[thing.Position] == true)
-                {
-                    //Log.Message($"{thing.ThingID} at {thing.Position} within hive grid!");
-                    return true;
-                }
+                if (mapHiveData.withinHiveGrid[thing.Position] == true) return true;
             }
             return false;
         }
@@ -241,59 +237,37 @@ namespace BetterInfestations
         }
         public static IntVec3 GetColonyStockpileSpot(Map map)
         {
-         
+            // not implemented
+
             return IntVec3.Invalid;
         }
         public static IntVec3 FindPathToPrey(Pawn pawn)
         {
             if (pawn != null && pawn.Downed) return IntVec3.Invalid;
             List<Thing> targetList = new List<Thing>();
-            Faction targetFaction;
 
             foreach (Thing t in pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree))
             {
-                if (!t.DestroyedOrNull() && (t.def != ThingDefOf.InsectJelly) && !t.def.IsCorpse && !t.IsBurning() && !t.Fogged())
-                {
-                    targetList.Add(t);
-                    //Log.Message(t.ThingID);
-                }
+                if (ValidatorUtility.itemValidator(pawn, true, false)(t)) targetList.Add(t);
             }
             foreach (Pawn p in pawn.Map.mapPawns.AllPawnsSpawned.ToList())
             {
-                targetFaction = p.Faction;
-                if (!p.DestroyedOrNull() && !p.Dead && (targetFaction == null || (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
-                {
-                    targetList.Add(p);
-                }
+                if (ValidatorUtility.pawnValidator(pawn, true, false, false)(p)) targetList.Add(p);
             }
             foreach (Corpse c in pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Corpse))
             {
-                if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && !c.IsDessicated() && !c.IsBurning() && !c.Fogged())
-                {
-                    targetFaction = c.InnerPawn.Faction;
-                    if (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect")
-                    {
-                        targetList.Add(c);
-                    }
-                }
+                if (ValidatorUtility.corpseValidator(pawn, true, false)(c)) targetList.Add(c);
             }
 
             if (targetList.NullOrEmpty()) return IntVec3.Invalid;
 
             Thing result = null;
-            Predicate<Thing> validator = delegate (Thing t)
-            {
-                if (!WithinHive(pawn, t, true) && pawn.CanReserve(t))
-                {
-                    return true;
-                }
-                return false;
-            };
+
             //Log.Message($"Finding thing in list of {targetList.Count}");
-            result = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, targetList, PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassAllDestroyableThings, Danger.Deadly, false), pawn.Map.Size.LengthHorizontal, validator);
+            result = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, targetList, PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassAllDestroyableThings, Danger.Deadly, false), pawn.Map.Size.LengthHorizontal);
             if (result == null) return IntVec3.Invalid;
 
-            Log.Message($"Finding path to {result.ThingID}");
+            //Log.Message($"Finding path to {result.ThingID}");
             using (PawnPath pawnPath = pawn.Map.pathFinder.FindPathNow(start: pawn.Position, target: result.Position, traverseParms: TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassAllDestroyableThings, false), peMode: PathEndMode.OnCell))
             {
                 List<IntVec3> cells = pawnPath.NodesReversed;
@@ -309,7 +283,7 @@ namespace BetterInfestations
                     }
                 }
             }
-            Log.Message($"No path found!");
+            //Log.Message($"No path found!");
 
             return IntVec3.Invalid;
         }
@@ -319,10 +293,8 @@ namespace BetterInfestations
             List<string> jobs = (List<string>)FI_jobsGivenRecentTicksTextual.GetValue(pawn.jobs);
             if (!jobs.NullOrEmpty())
             {
-                //Log.Message($"{jobs.Count}");
                 foreach (string job in jobs)
                 {
-                    //Log.Message($"{job}");
                     if (job.Contains(JobName)) return true;
                 }
             }

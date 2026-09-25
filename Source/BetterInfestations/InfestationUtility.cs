@@ -25,8 +25,7 @@ namespace BetterInfestations
         {
             float factor;
             if (timeDays > 15f) factor = 1.0f;
-            else factor = GenPointsFactorCurve.Evaluate(timeDays);
-            Log.Message(factor);
+            else factor = HiveTimeFactorCurveDays.Evaluate(timeDays);
             return factor;
         }
         public static float CalculateThreat(float baseThreat)

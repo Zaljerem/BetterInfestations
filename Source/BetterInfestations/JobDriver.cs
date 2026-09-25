@@ -161,7 +161,7 @@ namespace BetterInfestations
         }
         public void ConvertToJelly()
         {
-            Log.Message("converting");
+            //Log.Message("converting");
             if (thing != null)
             {
                 Corpse corpse = thing as Corpse;
