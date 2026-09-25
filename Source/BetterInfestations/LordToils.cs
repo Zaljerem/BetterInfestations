@@ -11,6 +11,7 @@ namespace BetterInfestations
         public float distToHiveToAttack = 30f;
         public override void UpdateAllDuties()
         {
+            Log.Message($"DefendAndExpandHive for {lord}");
             if (lord != null && !lord.ownedPawns.NullOrEmpty())
             {
                 for (int i = 0; i < lord.ownedPawns.Count; i++)

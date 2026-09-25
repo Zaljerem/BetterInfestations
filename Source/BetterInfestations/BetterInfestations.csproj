@@ -1,16 +1,38 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>BetterInfestations</AssemblyName>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+    <PropertyGroup>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    </PropertyGroup>
+  <PropertyGroup>
+	  <LangVersion>latest</LangVersion>
+	  <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseOutputPath></BaseOutputPath>
   </PropertyGroup>
-  <PropertyGroup />
    <ItemGroup>   
     <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.*-*" />
     <PackageReference Include="Lib.Harmony" Version="2.4.1" />	
   </ItemGroup>
+   <ItemGroup>
+     <Compile Update="Properties\Settings.Designer.cs">
+       <DesignTimeSharedInput>True</DesignTimeSharedInput>
+       <AutoGen>True</AutoGen>
+       <DependentUpon>Settings.settings</DependentUpon>
+     </Compile>
+   </ItemGroup>
+   <ItemGroup>
+     <None Update="Properties\Settings.settings">
+       <Generator>SettingsSingleFileGenerator</Generator>
+       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+     </None>
+   </ItemGroup>
+   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+     <Exec Command="xcopy &quot;$(TargetDir)&quot; &quot;..\..\1.6\Assemblies&quot; /Y /I&#xD;&#xA;&quot;C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64.exe&quot;" />
+   </Target>
 </Project>

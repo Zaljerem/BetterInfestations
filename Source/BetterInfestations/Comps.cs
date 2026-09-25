@@ -558,18 +558,20 @@ namespace BetterInfestations
     }
     public class CompSpawnerPawns : ThingComp
     {
-        public List<float> maxSpawnedPawnsPoints = new List<float> { 1000f, 1000f, -1f, -1f };
-        public List<int> nextPawnSpawnTick = new List<int> { -1, -1, -1, -1 };
-        public List<List<Pawn>> spawnedPawns = new List<List<Pawn>> { new List<Pawn>(), new List<Pawn>(), new List<Pawn>(), new List<Pawn>() };
-        public List<Lord> Lord = new List<Lord> { null, null, null, null };
+        public float[] maxSpawnedPawnsPoints = { 1000f, 1000f, -1f, -1f };
+        public int[] nextPawnSpawnTick = { -1, -1, -1, -1 };
+        public HashSet<Pawn>[] spawnedPawns = { new(), new(), new(), new() };
+        public Lord[] Lord = { null, null, null, null };
         public bool canSpawnPawns = true;
         public bool queenSpawned = false;
-        public List<Thing> attackTarget = new List<Thing> { null, null, null, null };
-        public List<IntVec3> patrolLoc = new List<IntVec3> { IntVec3.Invalid, IntVec3.Invalid, IntVec3.Invalid, IntVec3.Invalid };
-        public List<LocomotionUrgency> patrolLocomotion = new List<LocomotionUrgency> { LocomotionUrgency.Walk, LocomotionUrgency.Walk, LocomotionUrgency.Walk, LocomotionUrgency.Walk };
-        public List<bool> waitForOrders = new List<bool> { true, true, true, true };
-        public List<int> waitTicks = new List<int> { 0, 0, 0, 0 };
+        public Thing[] attackTarget = { null, null, null, null };
+        public IntVec3[] patrolLoc = { IntVec3.Invalid, IntVec3.Invalid, IntVec3.Invalid, IntVec3.Invalid };
+        public LocomotionUrgency[] patrolLocomotion = { LocomotionUrgency.Walk, LocomotionUrgency.Walk, LocomotionUrgency.Walk, LocomotionUrgency.Walk };
+        public bool[] waitForOrders = { true, true, true, true };
+        public int[] waitTicks = { 0, 0, 0, 0 };
         public int reassignPawnTick = -1;
+
+        public int numGroups = 4;
 
         public CompProperties_SpawnerPawns Props => (CompProperties_SpawnerPawns)props;
 
@@ -582,11 +584,11 @@ namespace BetterInfestations
         {
             FilterOutUnspawnedPawns(index);
             int num = 0;
-            for (int i = 0; i < spawnedPawns[index].Count; i++)
+            foreach (Pawn pawn in spawnedPawns[index])
             {
-                if (spawnedPawns[index][i].jobs.posture != PawnPosture.LayingOnGroundNormal && spawnedPawns[index][i].mindState != null && spawnedPawns[index][i].mindState.duty != null)
+                if (pawn.jobs.posture != PawnPosture.LayingOnGroundNormal && pawn.mindState != null && pawn.mindState.duty != null)
                 {
-                    num += (int)spawnedPawns[index][i].kindDef.combatPower;
+                    num += (int)pawn.kindDef.combatPower;
                 }
             }
             return num;
@@ -643,29 +645,26 @@ namespace BetterInfestations
         }
         private void FilterOutUnspawnedPawns(int index)
         {
-            spawnedPawns[index].RemoveAll(x => !x.Spawned);
+            spawnedPawns[index].RemoveWhere(x => !x.Spawned);
         }
         private void ReassignNullDutyPawns()
         {
-            foreach (Pawn p in parent.Map.mapPawns.AllPawns)
+            foreach (Pawn p in parent.Map.mapPawns.SpawnedPawnsInFaction(Faction.OfInsects))
             {
-                if (p != null && p.Spawned && (p.kindDef == RimWorld.PawnKindDefOf.Megascarab || p.kindDef == RimWorld.PawnKindDefOf.Spelopede || p.kindDef == RimWorld.PawnKindDefOf.Megaspider || p.kindDef == PawnKindDefOf.BI_Queen))
+                if (p != null && !p.Downed && p.mindState.duty == null)
                 {
-                    if (!p.Downed && p.mindState.duty == null && p.Faction == Faction.OfInsects)
+                    for (int i = 0; i < 4; i++)
                     {
-                        for (int i = 0; i < 4; i++)
-                        {
-                            Lord lord = Lord[i];
-                            if (lord == null) continue;
+                        Lord lord = Lord[i];
+                        if (Lord == null) continue;
 
-                            if (lord.ownedPawns != null && !lord.ownedPawns.Contains(p) && spawnedPawns[i].Contains(p))
-                            {
-                                FieldInfo FI_curLordToil = typeof(Lord).GetField("curLordToil", Patches.allFlags);
-                                LordToil lordToil = (LordToil)FI_curLordToil.GetValue(lord);
-                                lord.AddPawn(p);
-                                parent.Map.attackTargetsCache.UpdateTarget(p);
-                                lordToil.UpdateAllDuties();
-                            }
+                        if (lord.ownedPawns != null && !lord.ownedPawns.Contains(p) && spawnedPawns[i].Contains(p))
+                        {
+                            FieldInfo FI_curLordToil = typeof(Lord).GetField("curLordToil", Patches.allFlags);
+                            LordToil lordToil = (LordToil)FI_curLordToil.GetValue(lord);
+                            lord.AddPawn(p);
+                            parent.Map.attackTargetsCache.UpdateTarget(p);
+                            lordToil.UpdateAllDuties();
                         }
                     }
                 }
@@ -996,10 +995,10 @@ namespace BetterInfestations
         public override void PostExposeData()
         {
             base.PostExposeData();
-            List<Pawn> defenseGroup = spawnedPawns[0];
-            List<Pawn> huntingGroup1 = spawnedPawns[1];
-            List<Pawn> huntingGroup2 = spawnedPawns[2];
-            List<Pawn> huntingGroup3 = spawnedPawns[3];
+            HashSet<Pawn> defenseGroup = spawnedPawns[0];
+            HashSet<Pawn> huntingGroup1 = spawnedPawns[1];
+            HashSet<Pawn> huntingGroup2 = spawnedPawns[2];
+            HashSet<Pawn> huntingGroup3 = spawnedPawns[3];
             int defenseGroupSpawnTick = nextPawnSpawnTick[0];
             int huntingGroup1SpawnTick = nextPawnSpawnTick[1];
             int huntingGroup2SpawnTick = nextPawnSpawnTick[2];
@@ -1117,7 +1116,7 @@ namespace BetterInfestations
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    spawnedPawns[i].RemoveAll((Pawn x) => x == null);
+                    spawnedPawns[i].RemoveWhere(x => x == null);
                 }
             }
         }

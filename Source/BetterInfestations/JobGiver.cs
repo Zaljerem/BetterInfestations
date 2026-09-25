@@ -217,6 +217,8 @@ namespace BetterInfestations
     {
         protected override Job TryGiveJob(Pawn pawn)
         {
+            //Log.Message($"Fight fire");
+
             if (pawn != null && pawn.Downed) return null;
             if (HiveUtility.JobsGivenRecentTick(pawn, "BeatFire")) return null;
 
@@ -398,6 +400,8 @@ namespace BetterInfestations
 
         protected override Job TryGiveJob(Pawn pawn)
         {
+            //Log.Message($"Patrol job");
+
             if (pawn != null && pawn.Downed) return null;
             if (HiveUtility.JobsGivenRecentTick(pawn, "BI_GotoPatrol")) return null;
 

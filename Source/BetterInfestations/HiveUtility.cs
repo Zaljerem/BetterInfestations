@@ -133,7 +133,7 @@ namespace BetterInfestations
             if (hive != null)
             {
                 List<Pawn> pawns = new List<Pawn>();
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.numGroups; i++)
                 {
                     pawns.AddRange(hive.CompSpawnerPawns.spawnedPawns[i]);
                 }
@@ -167,7 +167,7 @@ namespace BetterInfestations
         {
             if (pawn != null && hive != null)
             {
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.numGroups; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
@@ -186,7 +186,7 @@ namespace BetterInfestations
         {
             if (pawn != null && hive != null)
             {
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.numGroups; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
@@ -204,7 +204,7 @@ namespace BetterInfestations
         {
             if (pawn != null && hive != null)
             {
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.numGroups; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
@@ -218,7 +218,7 @@ namespace BetterInfestations
         {
             if (pawn != null && hive != null)
             {
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.numGroups; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
@@ -236,7 +236,7 @@ namespace BetterInfestations
             if (pawn != null && hive != null)
             {
                 float points = 0;
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.numGroups; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
@@ -338,7 +338,7 @@ namespace BetterInfestations
                 Hive hive = GetHive(pawn);
                 if (hive == null) return false;
 
-                for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Count; i++)
+                for (int i = 0; i < hive.CompSpawnerPawns.numGroups; i++)
                 {
                     foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
                     {
