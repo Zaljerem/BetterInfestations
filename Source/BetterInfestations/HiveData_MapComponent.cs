@@ -20,13 +20,13 @@ namespace BetterInfestations
         {
             if (pawn.DestroyedOrNull() || hive.DestroyedOrNull()) return;
 
-            Log.Message($"Added pawn {pawn.ThingID} to pawnToHiveDict!");
+            //Log.Message($"Added pawn {pawn.ThingID} to pawnToHiveDict!");
             pawnToHiveDict[pawn] = hive;
         }
 
         public void RemovePawnHiveData(Pawn pawn, Hive hive)
         {
-            Log.Message($"Removed pawn {pawn.ThingID} from pawnToHiveDict!");
+            //Log.Message($"Removed pawn {pawn.ThingID} from pawnToHiveDict!");
             pawnToHiveDict.Remove(pawn);
         }
 

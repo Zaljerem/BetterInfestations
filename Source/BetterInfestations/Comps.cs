@@ -8,6 +8,7 @@ using UnityEngine;
 using Verse;
 using Verse.AI;
 using Verse.AI.Group;
+using Verse.Noise;
 using Verse.Sound;
 
 namespace BetterInfestations
@@ -558,7 +559,7 @@ namespace BetterInfestations
     }
     public class CompSpawnerPawns : ThingComp
     {
-        public float[] maxSpawnedPawnsPoints = { 1000f, 1000f, -1f, -1f };
+        public float[] maxSpawnedPawnsPoints = { -1f, -1f, -1f, -1f };
         public int[] nextPawnSpawnTick = { -1, -1, -1, -1 };
         public HashSet<Pawn>[] spawnedPawns = { new(), new(), new(), new() };
         public Lord[] Lord = { null, null, null, null };
@@ -575,12 +576,13 @@ namespace BetterInfestations
 
         public float SpawnedPawnsPoints(int index)
         {
-            FilterOutUnspawnedPawns(index);
+            FilterOutDeadPawns(index);
+
             return spawnedPawns[index].Sum(x => Convert.ToSingle(x.kindDef.combatPower));
         }
         public int GroupStrength(int index)
         {
-            FilterOutUnspawnedPawns(index);
+            FilterOutDeadPawns(index);
             int num = 0;
             foreach (Pawn pawn in spawnedPawns[index])
             {
@@ -608,12 +610,22 @@ namespace BetterInfestations
         {
             if (BetterInfestationsMod.settings == null) return;
 
+
+            float baseThreat = StorytellerUtility.DefaultThreatPointsNow(parent.Map);
+            float threatScore = InfestationUtility.CalculateThreat(baseThreat);
+
+            float initialPawnsPoints = BetterInfestationsMod.settings.initialPawnsPoints;
+            Log.Message($"initialPawnsPoints = {initialPawnsPoints}, threatScore = {threatScore}");
+
+            // maxSpawnedPawnsPoints will progress over time
+            maxSpawnedPawnsPoints[0] = initialPawnsPoints;
+            maxSpawnedPawnsPoints[1] = initialPawnsPoints;
             if (BetterInfestationsMod.settings.hiveLevel >= 2)
             {
-                maxSpawnedPawnsPoints[2] = 1000f;
+                maxSpawnedPawnsPoints[2] = initialPawnsPoints;
                 if (BetterInfestationsMod.settings.hiveLevel == 3)
                 {
-                    maxSpawnedPawnsPoints[3] = 1000f;
+                    maxSpawnedPawnsPoints[3] = initialPawnsPoints;
                 }
             }
 
@@ -623,7 +635,7 @@ namespace BetterInfestations
 
                 if (i == 0 || (i > 0 && BetterInfestationsMod.settings.initialHunterSpawnsAllowed))
                 {
-                    while (SpawnedPawnsPoints(i) < BetterInfestationsMod.settings.initialPawnsPoints)
+                    while (SpawnedPawnsPoints(i) < initialPawnsPoints)
                     {
                         if (!TrySpawnPawn(i, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects)) break;
                     }
@@ -641,21 +653,9 @@ namespace BetterInfestations
             int ticks = (int)(days * dayTicks);
             nextPawnSpawnTick[index] = Find.TickManager.TicksGame + ticks;
         }
-        private void FilterOutUnspawnedPawns(int index)
+        private void FilterOutDeadPawns(int index)
         {
-            if (Find.TickManager.TicksGame % 60 != 0) return;
-
-            HiveData_MapComponent mapHiveData = parent.Map.GetComponent<HiveData_MapComponent>();
-            spawnedPawns[index].RemoveWhere(x =>
-            { 
-                if(!x.Spawned)
-                {
-                    mapHiveData?.pawnToHiveDict.Remove(x);
-                    return true;
-                }
-                return false;
-            });
-
+            spawnedPawns[index].RemoveWhere(x => x.Dead || !x.Spawned);
         }
         private void ReassignNullDutyPawns()
         {
@@ -746,6 +746,32 @@ namespace BetterInfestations
             return choices.RandomElementByWeight(c => c.weight).kind;
         }
 
+        public void UpdateMaxPawnLimits()
+        {
+            int hiveCount = parent.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive).Count;
+
+            float baseThreat = StorytellerUtility.DefaultThreatPointsNow(parent.Map);
+            float threatScore = InfestationUtility.CalculateThreat(baseThreat);
+            float initialPawnsPoints = BetterInfestationsMod.settings.initialPawnsPoints;
+
+            float points = threatScore / (float)hiveCount;
+            points = Math.Max(initialPawnsPoints, points);
+            Log.Message($"points = {points}");
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (i == 0)
+                {
+                    maxSpawnedPawnsPoints[i] = Math.Min(points, 400f);
+                    //Log.Message($"points = {points}, points for group {i} = {maxSpawnedPawnsPoints[i]}");
+                }
+                else if (maxSpawnedPawnsPoints[i] > 0)
+                {
+                    maxSpawnedPawnsPoints[i] = Math.Min(points, 300f);
+                    //Log.Message($"points = {points}, points for group {i} = {maxSpawnedPawnsPoints[i]}");
+                }
+            }
+        }
 
         public bool TrySpawnPawn(int index, out Pawn pawn, PawnKindDef chosenKind, bool newbornPawn)
         {
@@ -807,12 +833,20 @@ namespace BetterInfestations
                 {
                     CalculateNextPawnSpawnTick(i);
                 }
-                FilterOutUnspawnedPawns(i);
+                //FilterOutUnspawnedPawns(i); // performance heavy!
                 if (Find.TickManager.TicksGame >= nextPawnSpawnTick[i])
                 {
-                    if (canSpawnPawns && SpawnedPawnsPoints(i) < maxSpawnedPawnsPoints[i] && TrySpawnPawn(i, out Pawn pawn, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects) && pawn.caller != null)
+                    // update maxSpawnedPawnsPoints based on hive age
+                    UpdateMaxPawnLimits();
+
+                    //Log.Message($"Checking that {SpawnedPawnsPoints(i)} < {maxSpawnedPawnsPoints[i]}");
+                    if (canSpawnPawns && SpawnedPawnsPoints(i) < maxSpawnedPawnsPoints[i])
                     {
-                        pawn.caller.DoCall();
+                        //Log.Message($"Trying to spawn pawn!");
+                        if (TrySpawnPawn(i, out Pawn pawn, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects) && pawn.caller != null)
+                        {
+                            pawn.caller.DoCall();
+                        }
                     }
                     if (i == 0 && canSpawnPawns && SpawnedPawnsPoints(i) >= 500 && !queenSpawned && BetterInfestationsMod.settings.queensAllowed && Rand.Range(1, 100) <= 30)
                     {

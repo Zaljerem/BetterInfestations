@@ -98,12 +98,12 @@
             </li>
           </subNodes>
         </li>        
-        <li Class="BetterInfestations.ThinkNode_PerTick">
-          <ticks>60</ticks>
-          <subNodes>
+        <!-- <li Class="BetterInfestations.ThinkNode_PerTick"> -->
+          <!-- <ticks>60</ticks> -->
+          <!-- <subNodes> -->
             <li Class="BetterInfestations.JobGiver_Patrol" />
-          </subNodes>
-        </li>
+          <!-- </subNodes>
+        </li> -->
       </subNodes>
     </thinkNode>
   </DutyDef>

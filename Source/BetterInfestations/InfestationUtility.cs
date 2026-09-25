@@ -1,10 +1,57 @@
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace BetterInfestations
 {
     public static class InfestationUtility
     {
+        public static readonly SimpleCurve PointsFactorCurve = new SimpleCurve
+        {
+           new CurvePoint(0f, 0.7f),
+           new CurvePoint(2000f, 0.55f),
+           new CurvePoint(5000f, 0.45f)
+        };
+
+        public static float CalculateThreat(float baseThreat)
+        {
+            //Log.Message($"[BI] Base threat points: {baseThreat}");
+
+            float curvedThreat = baseThreat * PointsFactorCurve.Evaluate(baseThreat);
+
+            //Log.Message($"[BI] Curved threat points: {curvedThreat}");
+
+            float threatScale = Find.Storyteller.difficulty.threatScale;
+
+            //Log.Message($"[BI] Threat scale: {threatScale}");
+
+            float finalThreat = curvedThreat * threatScale;
+
+            //Log.Message($"[BI] FINAL threat points: {finalThreat}");
+
+            return finalThreat;
+        }
+        public static int CalculatePawnsPerHive(float threatPoints, float hiveCount)
+        {
+
+            float pawnPointsPerHive = threatPoints / hiveCount;
+
+            int pawnCount = Mathf.RoundToInt(pawnPointsPerHive / 40f);
+            pawnCount = Mathf.Clamp(pawnCount, 3, 15);
+            return pawnCount;
+        }
+        public static int CalculateHiveCount(float threatPoints)
+        {
+
+            int baseHives = Mathf.Clamp(
+                Mathf.RoundToInt(threatPoints / 220f),
+                1,
+                BetterInfestationsMod.settings.maxHivesPerMap
+            );
+
+            return Rand.RangeInclusive(baseHives, baseHives + 1);
+        }
+
         public static Thing SpawnTunnels(int hiveCount, Map map, bool spawnAnywhereIfNoGoodCell = false, string questTag = null)
         {
             IntVec3 loc;
