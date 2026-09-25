@@ -11,7 +11,7 @@
           <chaseTarget>false</chaseTarget>
         </li>
         <li Class="BetterInfestations.ThinkNode_PerTick">
-          <ticks>30</ticks>
+          <ticks>60</ticks>
           <subNodes>
             <li Class="BetterInfestations.JobGiver_FightFire" />
             <li Class="BetterInfestations.JobGiver_Hunt" />
@@ -82,7 +82,7 @@
     <thinkNode Class="ThinkNode_Priority">
       <subNodes>
         <li Class="BetterInfestations.ThinkNode_PerTick">
-          <ticks>30</ticks>
+          <ticks>60</ticks>
           <subNodes>
             <li Class="BetterInfestations.JobGiver_FightFire" />
           </subNodes>
@@ -98,12 +98,12 @@
             </li>
           </subNodes>
         </li>        
-        <!-- <li Class="BetterInfestations.ThinkNode_PerTick"> -->
-          <!-- <ticks>60</ticks> -->
-          <!-- <subNodes> -->
+        <li Class="BetterInfestations.ThinkNode_PerTick">
+          <ticks>600</ticks>
+          <subNodes>
             <li Class="BetterInfestations.JobGiver_Patrol" />
-          <!-- </subNodes>
-        </li> -->
+          </subNodes>
+        </li>
       </subNodes>
     </thinkNode>
   </DutyDef>

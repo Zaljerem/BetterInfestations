@@ -20,11 +20,11 @@ namespace BetterInfestations
         {
             if (pawn.DestroyedOrNull() || hive.DestroyedOrNull()) return;
 
-            //Log.Message($"Added pawn {pawn.ThingID} to pawnToHiveDict!");
+            Log.Message($"Added pawn {pawn.ThingID} to pawnToHiveDict! Size is {pawnToHiveDict.Count}");
             pawnToHiveDict[pawn] = hive;
         }
 
-        public void RemovePawnHiveData(Pawn pawn, Hive hive)
+        public void RemovePawnHiveData(Pawn pawn)
         {
             //Log.Message($"Removed pawn {pawn.ThingID} from pawnToHiveDict!");
             pawnToHiveDict.Remove(pawn);
@@ -35,6 +35,26 @@ namespace BetterInfestations
             // placeholder
         }
 
+        public void RemovePawnHiveDataSweep()
+        {
+            List<Pawn> pawnsToRemove = new List<Pawn>();
+            foreach (Pawn p in pawnToHiveDict.Keys)
+            {
+                if (p.DestroyedOrNull() || p.Dead)
+                {
+                    pawnsToRemove.Add(p);
+                }
+            }
+            if ( pawnsToRemove != null )
+            {
+                foreach (Pawn p in pawnsToRemove)
+                {
+                    pawnToHiveDict.Remove(p);
+                    Log.Message($"Removed pawn {p} from dict! Size is {pawnToHiveDict.Count}");
+                }
+            }
+        }
+
         public override void FinalizeInit()
         {
             base.FinalizeInit();
@@ -43,7 +63,7 @@ namespace BetterInfestations
             {
                 foreach (Hive hive in map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
                 {
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < 3; i++)
                     {
                         foreach (Pawn p in hive.TryGetComp<CompSpawnerPawns>()?.spawnedPawns[i])
                         {
@@ -52,6 +72,13 @@ namespace BetterInfestations
                     }
                 }
             }
+            //foreach (Hive hive in map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
+            //{
+            //    if (hive.TryGetComp<CompSpawnerPawns>().mapHiveData == null)
+            //    {
+            //        hive.TryGetComp<CompSpawnerPawns>().mapHiveData = this;
+            //    }
+            //}
         }
 
         public override void ExposeData()

@@ -79,7 +79,7 @@ namespace BetterInfestations
                     CompSpawnerPawns comp = hive.CompSpawnerPawns;
                     if (comp == null) return null;
 
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < 3; i++)
                     {
                         if (comp.Lord[i] == lord)
                         {
@@ -108,18 +108,26 @@ namespace BetterInfestations
         {
             if (pawn == null || thing == null) return false;
 
-            foreach (Thing t in pawn.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
+            HiveData_MapComponent mapHiveData = pawn.Map.GetComponent<HiveData_MapComponent>();
+
+            if (mapHiveData.pawnToHiveDict.TryGetValue(pawn, out Hive hive) || NearOtherHive)
             {
-                Hive hive = t as Hive;
-                if (hive != null)
-                {
-                    if (PawnFromHive(hive, pawn) || NearOtherHive)
-                    {
-                        int dist = IntVec3Utility.ManhattanDistanceFlat(hive.Position, thing.Position);
-                        if (dist <= 8) return true;
-                    }
-                }
-            }
+                int dist = IntVec3Utility.ManhattanDistanceFlat(hive.Position, thing.Position);
+                if (dist <= 8) return true;
+            };
+
+            //foreach (Thing t in pawn.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
+            //{
+            //    hive = t as Hive;
+            //    if (hive != null)
+            //    {
+            //        if (PawnFromHive(hive, pawn) || NearOtherHive)
+            //        {
+            //            int dist = IntVec3Utility.ManhattanDistanceFlat(hive.Position, thing.Position);
+            //            if (dist <= 8) return true;
+            //        }
+            //    }
+            //}
             return false;
         }
         public static HashSet<Pawn> AllHivePawns(Hive hive)
@@ -157,17 +165,14 @@ namespace BetterInfestations
         }
         public static IntVec3 GetPatrolSpot(Pawn pawn, Hive hive, out LocomotionUrgency locomotionUrgency)
         {
-            if (pawn != null && hive != null)
+            if (!pawn.DestroyedOrNull() && !hive.DestroyedOrNull())
             {
                 for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
                 {
-                    foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
+                    if (hive.CompSpawnerPawns.spawnedPawns[i].Contains(pawn))
                     {
-                        if (p == pawn)
-                        {
-                            locomotionUrgency = hive.CompSpawnerPawns.patrolLocomotion[i];
-                            return hive.CompSpawnerPawns.patrolLoc[i];
-                        }
+                        locomotionUrgency = hive.CompSpawnerPawns.patrolLocomotion[i];
+                        return hive.CompSpawnerPawns.patrolLoc[i];
                     }
                 }
             }
@@ -180,14 +185,11 @@ namespace BetterInfestations
             {
                 for (int i = 0; i < hive.CompSpawnerPawns.spawnedPawns.Length; i++)
                 {
-                    foreach (Pawn p in hive.CompSpawnerPawns.spawnedPawns[i])
+                    if (hive.CompSpawnerPawns.spawnedPawns[i].Contains(pawn))
                     {
-                        if (p == pawn)
-                        {
-                            hive.CompSpawnerPawns.patrolLoc[i] = cell;
-                            hive.CompSpawnerPawns.patrolLocomotion[i] = locomotionUrgency;
-                            return;
-                        }
+                        hive.CompSpawnerPawns.patrolLoc[i] = cell;
+                        hive.CompSpawnerPawns.patrolLocomotion[i] = locomotionUrgency;
+                        return;
                     }
                 }
             }
@@ -252,23 +254,28 @@ namespace BetterInfestations
             if (pawn != null && pawn.Downed) return IntVec3.Invalid;
             List<Thing> targetList = new List<Thing>();
 
-            foreach (Thing t in pawn.Map.listerThings.AllThings)
+            foreach (Thing t in pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree))
             {
-                if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
+                if (!t.DestroyedOrNull() && (t.def != ThingDefOf.InsectJelly) && !t.def.IsCorpse && !t.IsBurning() && !t.Fogged())
                 {
                     targetList.Add(t);
+                    Log.Message(t.ThingID);
                 }
-                Pawn p = t as Pawn;
-                if (p != null && (p.Faction == null || (p.Faction != null && p.Faction != pawn.Faction && p.Faction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
+            }
+            foreach (Pawn p in pawn.Map.mapPawns.AllPawnsSpawned.ToList())
+            {
+                if (!p.DestroyedOrNull() && !p.Dead && (p.Faction == null || (p.Faction != null && p.Faction != pawn.Faction && p.Faction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
                 {
-                    targetList.Add(t);
+                    targetList.Add(p);
                 }
-                Corpse c = t as Corpse;
-                if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
+            }
+            foreach (Corpse c in pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Corpse))
+            {
+                if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && !c.IsDessicated() && !c.IsBurning() && !c.Fogged())
                 {
-                    if (c.InnerPawn.Faction == null || (c.InnerPawn.Faction != null && c.InnerPawn.Faction != pawn.Faction && c.InnerPawn.Faction.def.defName != "VFEI_Insect"))
+                    if (c.InnerPawn.Faction != null && c.InnerPawn.Faction != pawn.Faction && c.InnerPawn.Faction.def.defName != "VFEI_Insect")
                     {
-                        targetList.Add(t);
+                        targetList.Add(c);
                     }
                 }
             }
@@ -284,14 +291,17 @@ namespace BetterInfestations
                 }
                 return false;
             };
-            result = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, targetList, PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassAllDestroyableThings, Danger.Deadly, false), 9999, validator);
+            //Log.Message($"Finding thing in list of {targetList.Count}");
+            result = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, targetList, PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassAllDestroyableThings, Danger.Deadly, false), 200, validator);
             if (result == null) return IntVec3.Invalid;
 
+            Log.Message($"Finding path to {result.ThingID}");
             using (PawnPath pawnPath = pawn.Map.pathFinder.FindPathNow(start: pawn.Position, target: result.Position, traverseParms: TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassAllDestroyableThings, false), peMode: PathEndMode.OnCell))
             {
                 List<IntVec3> cells = pawnPath.NodesReversed;
                 if (!cells.NullOrEmpty())
                 {
+                    //Log.Message(cells.Count);
                     foreach (IntVec3 cell in cells)
                     {
                         if (IntVec3Utility.ManhattanDistanceFlat(pawn.Position, cell) <= 24)
@@ -301,6 +311,7 @@ namespace BetterInfestations
                     }
                 }
             }
+            Log.Message($"No path found!");
 
             return IntVec3.Invalid;
         }
@@ -310,8 +321,10 @@ namespace BetterInfestations
             List<string> jobs = (List<string>)FI_jobsGivenRecentTicksTextual.GetValue(pawn.jobs);
             if (!jobs.NullOrEmpty())
             {
+                //Log.Message($"{jobs.Count}");
                 foreach (string job in jobs)
                 {
+                    //Log.Message($"{job}");
                     if (job.Contains(JobName)) return true;
                 }
             }

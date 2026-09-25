@@ -44,7 +44,7 @@ namespace BetterInfestations
         {
 
             int baseHives = Mathf.Clamp(
-                Mathf.RoundToInt(threatPoints / 220f),
+                Mathf.RoundToInt(threatPoints / IncidentWorker_Infestation.HivePoints),
                 1,
                 BetterInfestationsMod.settings.maxHivesPerMap
             );

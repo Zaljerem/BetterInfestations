@@ -30,7 +30,7 @@ namespace BetterInfestations
                 Map map = (Map)parms.target;
                 if (BetterInfestationsMod.settings.infestationsAllowed && HiveUtility.TotalSpawnedHivesCount(map) < BetterInfestationsMod.settings.maxHivesPerMap)
                 {
-                    Thing t = InfestationUtility.SpawnTunnels(Mathf.Max(GenMath.RoundRandom(parms.points / 220f), 1), map, true);
+                    Thing t = InfestationUtility.SpawnTunnels(Mathf.Max(GenMath.RoundRandom(parms.points / HivePoints), 1), map, true);
                     if (t != null)
                     {
                         if (BetterInfestationsMod.settings.notificationInf)

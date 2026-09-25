@@ -53,7 +53,7 @@ namespace BetterInfestations
 
         public override void DeSpawn(DestroyMode mode = DestroyMode.Vanish)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 Lord lord = CompSpawnerPawns.Lord[i];
                 if (lord != null)
@@ -66,7 +66,7 @@ namespace BetterInfestations
 
         public override void Destroy(DestroyMode mode = DestroyMode.Vanish)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 Lord lord = CompSpawnerPawns.Lord[i];
                 if (lord != null)
@@ -118,7 +118,7 @@ namespace BetterInfestations
         {
             if (Spawned && (!dinfo.HasValue || dinfo.Value.Category != DamageInfo.SourceCategory.Collapse))
             {
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < 3; i++)
                 {
                     Lord lord = CompSpawnerPawns.Lord[i];
                     if (lord != null)

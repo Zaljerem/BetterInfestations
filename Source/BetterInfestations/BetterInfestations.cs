@@ -24,8 +24,8 @@ namespace BetterInfestations
         public int maxHivesPerMap = 30;
         public float initialPawnsPoints = 350f;
         public float jellyMultiplier = 0.25f;
-        public List<float> minSpawnInDays = new List<float> { 0.75f, 0.85f, 0.85f, 0.85f };
-        public List<float> maxSpawnInDays = new List<float> { 1.25f, 1.4f, 1.4f, 1.4f };
+        public List<float> minSpawnInDays = new List<float> { 0.75f, 0.85f, 0.85f};
+        public List<float> maxSpawnInDays = new List<float> { 1.25f, 1.4f, 1.4f};
         public float queenHiveMinSpawnInDays = 1.6f;
         public float queenHiveMaxSpawnInDays = 2.8f;
         public float hiveReproductionMinSpawnInDays = 3.8f;
@@ -41,8 +41,6 @@ namespace BetterInfestations
             float hunter1MaxSpawnInDays = maxSpawnInDays[1];
             float hunter2MinSpawnInDays = minSpawnInDays[2];
             float hunter2MaxSpawnInDays = maxSpawnInDays[2];
-            float hunter3MinSpawnInDays = minSpawnInDays[3];
-            float hunter3MaxSpawnInDays = maxSpawnInDays[3];
 
             Scribe_Values.Look(ref infestationsAllowed, "infestationsAllowed", true);
             Scribe_Values.Look(ref raidsAllowed, "raidsAllowed", true);
@@ -62,8 +60,6 @@ namespace BetterInfestations
             Scribe_Values.Look(ref hunter1MaxSpawnInDays, "hunter1MaxSpawnInDays", 1.4f);
             Scribe_Values.Look(ref hunter2MinSpawnInDays, "hunter2MinSpawnInDays", 0.85f);
             Scribe_Values.Look(ref hunter2MaxSpawnInDays, "hunter2MaxSpawnInDays", 1.4f);
-            Scribe_Values.Look(ref hunter3MinSpawnInDays, "hunter3MinSpawnInDays", 0.85f);
-            Scribe_Values.Look(ref hunter3MaxSpawnInDays, "hunter3MaxSpawnInDays", 1.4f);
             Scribe_Values.Look(ref queenHiveMinSpawnInDays, "queenHiveMinSpawnInDays", 1.6f);
             Scribe_Values.Look(ref queenHiveMaxSpawnInDays, "queenHiveMaxSpawnInDays", 2.8f);
             Scribe_Values.Look(ref hiveReproductionMinSpawnInDays, "hiveReproductionMinSpawnInDays", 3.8f);
@@ -75,8 +71,6 @@ namespace BetterInfestations
             maxSpawnInDays[1] = hunter1MaxSpawnInDays;
             minSpawnInDays[2] = hunter2MinSpawnInDays;
             maxSpawnInDays[2] = hunter2MaxSpawnInDays;
-            minSpawnInDays[3] = hunter3MinSpawnInDays;
-            maxSpawnInDays[3] = hunter3MaxSpawnInDays;
         }
     }
 
@@ -104,8 +98,6 @@ namespace BetterInfestations
             settings.maxSpawnInDays[1] = 2.5f;
             settings.minSpawnInDays[2] = 1.8f;
             settings.maxSpawnInDays[2] = 2.5f;
-            settings.minSpawnInDays[3] = 1.8f;
-            settings.maxSpawnInDays[3] = 2.5f;
             settings.queenHiveMinSpawnInDays = 2.8f;
             settings.queenHiveMaxSpawnInDays = 4.2f;
             settings.hiveReproductionMinSpawnInDays = 5.2f;
@@ -126,8 +118,6 @@ namespace BetterInfestations
             settings.maxSpawnInDays[1] = 1.4f;
             settings.minSpawnInDays[2] = 0.85f;
             settings.maxSpawnInDays[2] = 1.4f;
-            settings.minSpawnInDays[3] = 0.85f;
-            settings.maxSpawnInDays[3] = 1.4f;
             settings.queenHiveMinSpawnInDays = 1.6f;
             settings.queenHiveMaxSpawnInDays = 2.8f;
             settings.hiveReproductionMinSpawnInDays = 3.8f;
@@ -148,8 +138,6 @@ namespace BetterInfestations
             settings.maxSpawnInDays[1] = 1.15f;
             settings.minSpawnInDays[2] = 0.65f;
             settings.maxSpawnInDays[2] = 1.15f;
-            settings.minSpawnInDays[3] = 0.65f;
-            settings.maxSpawnInDays[3] = 1.15f;
             settings.queenHiveMinSpawnInDays = 1.2f;
             settings.queenHiveMaxSpawnInDays = 2.2f;
             settings.hiveReproductionMinSpawnInDays = 3f;
@@ -170,8 +158,6 @@ namespace BetterInfestations
             settings.maxSpawnInDays[1] = 0.95f;
             settings.minSpawnInDays[2] = 0.45f;
             settings.maxSpawnInDays[2] = 0.95f;
-            settings.minSpawnInDays[3] = 0.45f;
-            settings.maxSpawnInDays[3] = 0.95f;
             settings.queenHiveMinSpawnInDays = 0.8f;
             settings.queenHiveMaxSpawnInDays = 1.5f;
             settings.hiveReproductionMinSpawnInDays = 2.2f;
@@ -415,28 +401,6 @@ namespace BetterInfestations
             }
 
             y += 48f;
-            Rect drawTexRect5 = new Rect(x, y, width + 8f, height);
-            GUI.DrawTexture(drawTexRect5, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
-            Rect labelRect6 = new Rect(x + 8f, outRect.position.y + 360f, width, height);
-            Widgets.Label(labelRect6, "Hive: Hunter group 3 spawn intervals");
-
-            y += 48f;
-            Rect sliderRect7 = new Rect(x, y, width - 4f, height);
-            settings.minSpawnInDays[3] = HorizontalSliderFraction(sliderRect7, settings.minSpawnInDays[3], 0.05f, 3f, false, null, "Minimum interval", settings.minSpawnInDays[3].ToString() + " Days", 0.05f, 2);
-            if (settings.minSpawnInDays[3] > settings.maxSpawnInDays[3])
-            {
-                settings.maxSpawnInDays[3] = settings.minSpawnInDays[3];
-            }
-
-            y += 32f;
-            Rect sliderRect8 = new Rect(x, y, width - 4f, height);
-            settings.maxSpawnInDays[3] = HorizontalSliderFraction(sliderRect8, settings.maxSpawnInDays[3], 0.05f, 3f, false, null, "Maximum interval", settings.maxSpawnInDays[3].ToString() + " Days", 0.05f, 2);
-            if (settings.maxSpawnInDays[3] < settings.minSpawnInDays[3])
-            {
-                settings.minSpawnInDays[3] = settings.maxSpawnInDays[3];
-            }
-
-            y += 48f;
             Rect drawTexRect7 = new Rect(x, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect7, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect8 = new Rect(x + 8f, y, width, height);
@@ -546,10 +510,6 @@ namespace BetterInfestations
                                 if (hive.CompSpawnerPawns.Lord[2] != null)
                                 {
                                     Find.Maps[i].lordManager.RemoveLord(hive.CompSpawnerPawns.Lord[2]);
-                                }
-                                if (hive.CompSpawnerPawns.Lord[3] != null)
-                                {
-                                    Find.Maps[i].lordManager.RemoveLord(hive.CompSpawnerPawns.Lord[3]);
                                 }
                             }
                             hives[h].Destroy(DestroyMode.Vanish);

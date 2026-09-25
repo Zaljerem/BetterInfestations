@@ -108,7 +108,7 @@ namespace BetterInfestations
         public JobGiver_WanderHive()
         {
             wanderRadius = 8f;
-            ticksBetweenWandersRange = new IntRange(125, 200);
+            ticksBetweenWandersRange = new IntRange(120, 240);
         }
         protected override IntVec3 GetWanderRoot(Pawn pawn)
         {
@@ -265,7 +265,8 @@ namespace BetterInfestations
                 Corpse c = t as Corpse;
                 if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
                 {
-                    if (HiveUtility.WithinHive(pawn, c as Thing, false) && pawn.CanReserve(c))
+                    if (HiveUtility.WithinHive(pawn, c, false) && pawn.CanReserve(c))
+                    //if (pawn.CanReserve(c))
                     {
                         return true;
                     }
@@ -281,6 +282,7 @@ namespace BetterInfestations
                 if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
                 {
                     if (HiveUtility.WithinHive(pawn, t, false) && t.def.defName != RimWorld.ThingDefOf.InsectJelly.defName && pawn.CanReserve(t))
+                    //if (t.def.defName != RimWorld.ThingDefOf.InsectJelly.defName && pawn.CanReserve(t))
                     {
                         return true;
                     }
@@ -303,8 +305,8 @@ namespace BetterInfestations
             //IntVec3 pos = CellFinder.RandomClosewalkCellNear(hive.Position, pawn.Map, 5);
             IntVec3 pos;
             CellFinder.TryFindRandomCellNear(hive.Position, pawn.Map, 5,
-    (IntVec3 x) => x.Standable(pawn.Map) && !x.Fogged(pawn.Map) && !x.IsForbidden(pawn) && pawn.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Some),
-    out pos);
+                (IntVec3 x) => x.Standable(pawn.Map) && !x.Fogged(pawn.Map) && !x.IsForbidden(pawn) && pawn.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Some),
+                out pos);
 
             if (pos == IntVec3.Invalid || !pawn.CanReserve(pos))
             {
@@ -444,13 +446,13 @@ namespace BetterInfestations
                 }
             }
 
-            pawn.mindState.nextMoveOrderIsWait = !pawn.mindState.nextMoveOrderIsWait;
-            if (pawn.mindState.nextMoveOrderIsWait)
-            {
-                Job job = JobMaker.MakeJob(RimWorld.JobDefOf.Wait_Wander);
-                job.expiryInterval = WaitTicks.RandomInRange;
-                return job;
-            }
+            //pawn.mindState.nextMoveOrderIsWait = !pawn.mindState.nextMoveOrderIsWait;
+            //if (pawn.mindState.nextMoveOrderIsWait)
+            //{
+            //    Job job = JobMaker.MakeJob(RimWorld.JobDefOf.Wait_Wander);
+            //    job.expiryInterval = WaitTicks.RandomInRange;
+            //    return job;
+            //}
 
             Predicate<IntVec3> validator = delegate (IntVec3 c)
             {
