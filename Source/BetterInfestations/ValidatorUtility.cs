@@ -12,11 +12,11 @@ namespace BetterInfestations
 {
     public static class ValidatorUtility
     {
-        public static Predicate<Thing> pawnValidator(Pawn pawn, bool factionCheck = false, bool lookDowned = true, bool lookWithinHive = false) => delegate (Thing t)
+        public static Predicate<Thing> pawnValidator(Pawn pawn, bool factionCheck = false, bool lookForDownedOnly = true, bool lookWithinHive = false, bool careIfWithinHive = true) => delegate (Thing t)
         {
             Pawn p = t as Pawn;
             if (p == null) return false;
-            if (lookDowned && !p.Downed) return false;
+            if (lookForDownedOnly && !p.Downed) return false;
             if (!p.RaceProps.IsFlesh) return false;
             if (p.RaceProps.DeathActionWorker.DangerousInMelee) return false;
             if (p.IsBurning() || p.Fogged()) return false;
@@ -27,16 +27,20 @@ namespace BetterInfestations
                 if (targetFaction != null && (targetFaction == pawn.Faction || targetFaction.def.defName == "VFEI_Insect")) return false;
             }
 
-            if (lookWithinHive)
+            if (careIfWithinHive)
             {
-                // if not in hive and desired, return false
-                if (!HiveUtility.WithinHive(pawn, p, true)) return false;
+                if (lookWithinHive)
+                {
+                    // if not in hive and desired, return false
+                    if (!HiveUtility.WithinHive(pawn, p, true)) return false;
+                }
+                else
+                {
+                    // if in hive and not desired, return false
+                    if (HiveUtility.WithinHive(pawn, p, true)) return false;
+                }
             }
-            else
-            {
-                // if in hive and not desired, return false
-                if (HiveUtility.WithinHive(pawn, p, true)) return false;
-            }
+
             if (!pawn.CanReserve(p)) return false;
 
             return true;

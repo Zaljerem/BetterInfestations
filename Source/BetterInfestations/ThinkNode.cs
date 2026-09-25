@@ -14,7 +14,6 @@ namespace BetterInfestations
     public class ThinkNode_PerTick : ThinkNode_Priority
     {
         private float ticks = -1f;
-        //private float savedTick = -1f;
 
         public override ThinkResult TryIssueJobPackage(Pawn pawn, JobIssueParams jobParams)
         {

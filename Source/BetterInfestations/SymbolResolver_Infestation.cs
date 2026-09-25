@@ -16,7 +16,6 @@ namespace BetterInfestations
 
             Map map = BaseGen.globalSettings.map;
 
-            //float baseThreat = StorytellerUtility.DefaultThreatPointsNow(map);
             float baseThreat = StorytellerUtility.DefaultSiteThreatPointsNow();
 
             float threatPoints = InfestationUtility.CalculateThreat(baseThreat);
@@ -26,8 +25,8 @@ namespace BetterInfestations
             int hiveCount = InfestationUtility.CalculateHiveCount(threatPoints);
             int pawnsPerHive = InfestationUtility.CalculatePawnsPerHive(threatPoints, hiveCount);
 
-            Log.Message($"[BI] Hives: {hiveCount}");
-            Log.Message($"[BI] Pawns per hive: {pawnsPerHive}");
+            //Log.Message($"[BI] Hives: {hiveCount}");
+            //Log.Message($"[BI] Pawns per hive: {pawnsPerHive}");
 
             if (!TryFindRootCell(map, out IntVec3 rootCell))
                 return;
@@ -60,7 +59,7 @@ namespace BetterInfestations
 
             if (threatPoints > 1000f)
             {
-                Log.Message($"[BI] Threat points > 1000, bonus loot generated");
+                //Log.Message($"[BI] Threat points > 1000, bonus loot generated");
                 HiveUtility.SpawnRandomItems(rootHive);
             }
         }

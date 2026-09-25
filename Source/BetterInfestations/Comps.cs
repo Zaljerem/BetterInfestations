@@ -600,10 +600,6 @@ namespace BetterInfestations
                 foreach (Pawn pawn in spawnedPawns[i])
                 {
                     num += (int)pawn.kindDef.combatPower;
-                    //if (pawn.jobs.posture != PawnPosture.LayingOnGroundNormal && pawn.mindState != null && pawn.mindState.duty != null)
-                    //{
-                    //    num += (int)pawn.kindDef.combatPower;
-                    //}
                 }
             }
             return num;
@@ -640,7 +636,6 @@ namespace BetterInfestations
 
             float initialPawnsPoints = BetterInfestationsMod.settings.initialPawnsPoints;
 
-            // maxSpawnedPawnsPoints will progress over time
             maxSpawnedPawnsPoints[0] = Math.Min(400f, initialPawnsPoints);
             if (BetterInfestationsMod.settings.hiveLevel > 0) maxSpawnedPawnsPoints[1] = Math.Min(400f, initialPawnsPoints);
             if (BetterInfestationsMod.settings.hiveLevel > 1) maxSpawnedPawnsPoints[2] = Math.Min(400f, initialPawnsPoints);
@@ -654,7 +649,12 @@ namespace BetterInfestations
                     if (!TrySpawnPawn(i, out Pawn _, RandomWeightedPawnKindDef(), BetterInfestationsMod.settings.newbornInsects)) break;
                 }
             }
-            Log.Message($"Initial pawn points = {SpawnedPawnsPoints(0) + SpawnedPawnsPoints(1) + SpawnedPawnsPoints(2)}");
+
+
+            maxSpawnedPawnsPoints[0] = 200f;
+            if (BetterInfestationsMod.settings.hiveLevel > 0) maxSpawnedPawnsPoints[1] = 400f;
+            if (BetterInfestationsMod.settings.hiveLevel > 1) maxSpawnedPawnsPoints[2] = 400f;
+            //Log.Message($"Initial pawn points = {SpawnedPawnsPoints(0) + SpawnedPawnsPoints(1) + SpawnedPawnsPoints(2)}");
             CalculateNextPawnSpawnTick(0);
         }
         private void CalculateNextPawnSpawnTick(int index)
@@ -669,41 +669,9 @@ namespace BetterInfestations
         }
         public void UpdateMaxPawnLimits()
         {
-            //float baseThreat = StorytellerUtility.DefaultThreatPointsNow(parent.Map);
-            ////float threatScore = InfestationUtility.CalculateThreat(baseThreat);
-            //float threatScore = baseThreat;
-            //float initialPawnsPoints = BetterInfestationsMod.settings.initialPawnsPoints;
-
-            //float points = threatScore / (float)hiveCount;
-            //points = Math.Max(initialPawnsPoints, points);
-            //Log.Message($"baseThreat = {baseThreat}, threatScore = {threatScore}, points = {points}");
-
-            //Log.Message($"Group strengths for {parent.ThingID} = {GroupStrength(0)} {GroupStrength(1)} {GroupStrength(2)}");
-            maxSpawnedPawnsPoints[0] = Math.Min(200f, 200f);
-            maxSpawnedPawnsPoints[1] = Math.Min(400f, 400f);
-            if (GroupStrength(1) > 400f)
-            {
-                maxSpawnedPawnsPoints[2] = Math.Min(400f, 400f);
-            }
-
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    if (i == 0)
-            //    {
-            //        maxSpawnedPawnsPoints[i] = Math.Min(400f, 400f);
-            //        //Log.Message($"points = {points}, points for group {i} = {maxSpawnedPawnsPoints[i]}");
-            //    }
-            //    else if (maxSpawnedPawnsPoints[i] > 0)
-            //    {
-            //        maxSpawnedPawnsPoints[i] = Math.Min(300f, 300f);
-            //        //Log.Message($"points = {points}, points for group {i} = {maxSpawnedPawnsPoints[i]}");
-            //    }
-            //}
-
-            //if (GroupStrength(1) > 300f)
-            //{
-            //    maxSpawnedPawnsPoints[2] = 300f;
-            //}
+            // Gates the creation of the next hunter group until the group before it is at full strength
+            if (maxSpawnedPawnsPoints[1] < 400f && GroupStrength(0) > 200f) maxSpawnedPawnsPoints[1] = 400f;
+            if (maxSpawnedPawnsPoints[2] < 400f && GroupStrength(1) > 400f) maxSpawnedPawnsPoints[2] = 400f;
         }
         private void ReassignNullDutyPawns()
         {
@@ -809,7 +777,7 @@ namespace BetterInfestations
                 }
             }
 
-            Log.Message($"Total power = {totalPower} for {validPawnCount} pawns");
+            //Log.Message($"Total power = {totalPower} for {validPawnCount} pawns");
             //Log.Message($"{Math.Max(BetterInfestationsMod.settings.maxHivesPerMap * 1000f, 10000f) * (1.0f + (Find.Storyteller.difficulty.threatScale - 1.0f) / 6f)}");
             if (totalPower > Math.Max(BetterInfestationsMod.settings.maxHivesPerMap * 1000f, 10000f) * (1.0f + (Find.Storyteller.difficulty.threatScale - 1.0f) / 6f))
             {
@@ -853,10 +821,7 @@ namespace BetterInfestations
             if (Find.TickManager.TicksGame >= reassignPawnTick)
             {
                 ReassignNullDutyPawns();
-                UpdateMaxPawnLimits();
                 mapHiveData.RemovePawnHiveDataSweep();
-
-                // update maxSpawnedPawnsPoints based on hive age?
 
                 reassignPawnTick = Find.TickManager.TicksGame + 600;
             }
@@ -878,9 +843,10 @@ namespace BetterInfestations
                 }
                 if (Find.TickManager.TicksGame >= nextPawnSpawnTick[i])
                 {
+                    // Gate next spawn if hive too strong
                     if (TotalStrength() > InfestationUtility.CalculateHiveTimeFactor((Find.TickManager.TicksSinceSettle - parent.TickSpawned).TicksToDays()) * 1200f)
                     {
-                        Log.Message($"Total strength of {parent.ThingID} is {TotalStrength()}, greater than {InfestationUtility.CalculateHiveTimeFactor((Find.TickManager.TicksSinceSettle - parent.TickSpawned).TicksToDays()) * 1200f}!");
+                        //Log.Message($"Total strength of {parent.ThingID} is {TotalStrength()}, greater than {InfestationUtility.CalculateHiveTimeFactor((Find.TickManager.TicksSinceSettle - parent.TickSpawned).TicksToDays()) * 1200f}!");
                         CalculateNextPawnSpawnTick(i);
                         return;
                     }
@@ -893,6 +859,7 @@ namespace BetterInfestations
                         {
                             pawn.caller.DoCall();
                         }
+                        UpdateMaxPawnLimits();
                     }
 
                     // Try spawn queen
@@ -970,7 +937,7 @@ namespace BetterInfestations
                             {
                                 // Patrol towards prey
                                 patrolLoc[index] = pos;
-                                patrolLocomotion[index] = LocomotionUrgency.Jog;
+                                patrolLocomotion[index] = LocomotionUrgency.Walk;
                                 waitForOrders[index] = true;
                                 waitTicks[index] = Find.TickManager.TicksGame + 1200;
                                 return;

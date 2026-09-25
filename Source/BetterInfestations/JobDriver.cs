@@ -421,39 +421,18 @@ namespace BetterInfestations
 
         private bool PreyFound(Pawn pawn)
         {
-            Faction targetFaction;
             if (Find.TickManager.TicksGame >= nextDriverTick)
             {
                 nextDriverTick = Find.TickManager.TicksGame + 60;
-                Predicate<Thing> validator = delegate (Thing t)
-                {
-                    if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
-                    {
-                        return true;
-                    }
-                    Pawn p = t as Pawn;
-                    targetFaction = p.Faction;
-                    if (p != null && (targetFaction == null || (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
-                    {
-                        return true;
-                    }
-                    Corpse c = t as Corpse;
-                    if (c == null) return false;
-                    targetFaction = c.InnerPawn.Faction;
-                    if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
-                    {
-                        if (targetFaction == null || (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect"))
-                        {
-                            return true;
-                        }
-                    }
-                    return false;
-                };
-                Thing thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
-                if (thing != null)
-                {
-                    return true;
-                }
+
+                Thing thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.itemValidator(pawn, true, false));
+                if (thing != null) return true;
+
+                thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.pawnValidator(pawn, true, false, false, false));
+                if (thing != null) return true;
+
+                thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.corpseValidator(pawn, true, false));
+                if (thing != null) return true;
             }
             return false;
         }
@@ -494,7 +473,6 @@ namespace BetterInfestations
         }
         private bool FoundThreat(Pawn pawn)
         {
-            Faction targetFaction;
             if (Find.TickManager.TicksGame >= nextDriverTick)
             {
                 nextDriverTick = Find.TickManager.TicksGame + 60;
@@ -505,19 +483,14 @@ namespace BetterInfestations
                     {
                         return true;
                     }
-                    Pawn p = t as Pawn;
-                    targetFaction = p.Faction;
-                    if (!p.DestroyedOrNull() && targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect" && !p.Downed && !p.Fogged())
-                    {
-                        return true;
-                    }
                     return false;
                 };
-                Thing thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 24, validator);
-                if (thing != null)
-                {
-                    return true;
-                }
+                Thing thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.BuildingArtificial), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 24, validator);
+                if (thing != null) return true;
+
+                // Look out for pawn
+                thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 24, ValidatorUtility.pawnValidator(pawn, true, false, false, false));
+                if (thing != null) return true;
             }
             return false;
         }

@@ -341,8 +341,6 @@ namespace BetterInfestations
 
         protected override Job TryGiveJob(Pawn pawn)
         {
-            //Log.Message($"Patrol job");
-
             if (pawn != null && pawn.Downed) return null;
             if (HiveUtility.JobsGivenRecentTick(pawn, "BI_GotoPatrol")) return null;
 
@@ -449,7 +447,6 @@ namespace BetterInfestations
         public static Thing FindTarget(Pawn pawn)
         {
             Thing result = null;
-            Faction targetFaction;
             Predicate<Thing> validator = delegate (Thing t)
             {
                 Building_Turret b = t as Building_Turret;
@@ -474,18 +471,8 @@ namespace BetterInfestations
             result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.BuildingArtificial), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
             if (result != null) return result;
 
-            validator = delegate (Thing t)
-            {
-                Pawn p = t as Pawn;
-                if (p == null) return false;
-                targetFaction = p.Faction;
-                if (!p.DestroyedOrNull() && !p.IsBurning() && ((targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect") || targetFaction == null) && !p.Downed && pawn.CanReserve(p) && !p.Fogged())
-                {
-                    return true;
-                }
-                return false;
-            };
-            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, validator);
+            // Hunt pawn, cleaned up
+            result = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.pawnValidator(pawn, true, false, false));
             if (result != null) return result;
 
             if (pawn.mindState != null && pawn.mindState.duty.def == DutyDefOf.BI_HiveHunters)

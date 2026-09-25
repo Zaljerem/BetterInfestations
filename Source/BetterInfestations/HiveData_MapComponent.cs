@@ -41,7 +41,7 @@ namespace BetterInfestations
         {
             if (pawn.DestroyedOrNull() || hive.DestroyedOrNull()) return;
 
-            Log.Message($"Added pawn {pawn.ThingID} to pawnToHiveDict! Size is {pawnToHiveDict.Count}");
+            //Log.Message($"Added pawn {pawn.ThingID} to pawnToHiveDict! Size is {pawnToHiveDict.Count}");
             pawnToHiveDict[pawn] = hive;
         }
 
@@ -66,7 +66,7 @@ namespace BetterInfestations
                 foreach (Pawn p in pawnsToRemove)
                 {
                     pawnToHiveDict.Remove(p);
-                    Log.Message($"Removed pawn {p} from dict! Size is {pawnToHiveDict.Count}");
+                    //Log.Message($"Removed pawn {p} from dict! Size is {pawnToHiveDict.Count}");
                 }
             }
         }
@@ -75,7 +75,7 @@ namespace BetterInfestations
         {
             base.FinalizeInit();
 
-            if (pawnToHiveDict == null || pawnToHiveDict.NullOrEmpty())
+            if (pawnToHiveDict.NullOrEmpty())
             {
                 foreach (Hive hive in map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
                 {
@@ -88,13 +88,6 @@ namespace BetterInfestations
                     }
                 }
             }
-            //foreach (Hive hive in map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
-            //{
-            //    if (hive.TryGetComp<CompSpawnerPawns>().mapHiveData == null)
-            //    {
-            //        hive.TryGetComp<CompSpawnerPawns>().mapHiveData = this;
-            //    }
-            //}
         }
 
         public override void ExposeData()
@@ -102,15 +95,13 @@ namespace BetterInfestations
             base.ExposeData();
 
             Scribe_Collections.Look(ref pawnToHiveDict, "pawnToHiveDict", keyLookMode: LookMode.Reference, valueLookMode: LookMode.Reference);
+            Scribe_Deep.Look(ref withinHiveGrid, "withinHiveGrid");
 
             // reinitialize if null after load
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
-                if (pawnToHiveDict == null || pawnToHiveDict.NullOrEmpty())
-                {
-                    Log.Warning($"BetterInfestations: pawnToHiveDict not found after load!");
-                    pawnToHiveDict = new Dictionary<Pawn, Hive>();
-                }
+                if (pawnToHiveDict.NullOrEmpty()) pawnToHiveDict = new Dictionary<Pawn, Hive>();
+                if (withinHiveGrid == null) withinHiveGrid = new BoolGrid(map);
             }
         }
     }

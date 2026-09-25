@@ -2,8 +2,9 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/Source/BetterInfestations/.vs
+/Source/BetterInfestations/bin
 /Source/BetterInfestations/obj
 /Source/BetterInfestations/Properties/Settings.settings
 /.gitignore
 /.git
+*.vs
