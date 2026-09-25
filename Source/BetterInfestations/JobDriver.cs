@@ -421,6 +421,7 @@ namespace BetterInfestations
 
         private bool PreyFound(Pawn pawn)
         {
+            Faction targetFaction;
             if (Find.TickManager.TicksGame >= nextDriverTick)
             {
                 nextDriverTick = Find.TickManager.TicksGame + 60;
@@ -431,14 +432,17 @@ namespace BetterInfestations
                         return true;
                     }
                     Pawn p = t as Pawn;
-                    if (p != null && (p.Faction == null || (p.Faction != null && p.Faction != pawn.Faction && p.Faction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
+                    targetFaction = p.Faction;
+                    if (p != null && (targetFaction == null || (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
                     {
                         return true;
                     }
                     Corpse c = t as Corpse;
+                    if (c == null) return false;
+                    targetFaction = c.InnerPawn.Faction;
                     if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
                     {
-                        if (c.InnerPawn.Faction == null || (c.InnerPawn.Faction != null && c.InnerPawn.Faction != pawn.Faction && c.InnerPawn.Faction.def.defName != "VFEI_Insect"))
+                        if (targetFaction == null || (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect"))
                         {
                             return true;
                         }
@@ -490,6 +494,7 @@ namespace BetterInfestations
         }
         private bool FoundThreat(Pawn pawn)
         {
+            Faction targetFaction;
             if (Find.TickManager.TicksGame >= nextDriverTick)
             {
                 nextDriverTick = Find.TickManager.TicksGame + 60;
@@ -501,7 +506,8 @@ namespace BetterInfestations
                         return true;
                     }
                     Pawn p = t as Pawn;
-                    if (!p.DestroyedOrNull() && p.Faction != null && p.Faction != pawn.Faction && p.Faction.def.defName != "VFEI_Insect" && !p.Downed && !p.Fogged())
+                    targetFaction = p.Faction;
+                    if (!p.DestroyedOrNull() && targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect" && !p.Downed && !p.Fogged())
                     {
                         return true;
                     }

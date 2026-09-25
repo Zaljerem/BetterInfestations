@@ -451,10 +451,6 @@ namespace BetterInfestations
             Hive hive = parent as Hive;
             if (hive != null)
             {
-                //if (hive.CompSpawnerPawns.maxSpawnedPawnsPoints[1] > 0f)
-                //{
-                //    hive.CompSpawnerPawns.maxSpawnedPawnsPoints[2] = Math.Min(400f, 400f);
-                //}
                 if (hive.CompDormant.Awake)
                 {
                     newHive.CompDormant.WakeUp();
@@ -569,6 +565,7 @@ namespace BetterInfestations
         public int reassignPawnTick = -1;
         public HiveData_MapComponent mapHiveData;
 
+
         public CompProperties_SpawnerPawns Props => (CompProperties_SpawnerPawns)props;
 
         public float SpawnedPawnsPoints(int index)
@@ -576,6 +573,10 @@ namespace BetterInfestations
             FilterOutDeadPawns(index);
 
             return spawnedPawns[index].Sum(x => Convert.ToSingle(x.kindDef.combatPower));
+        }
+        private void FilterOutDeadPawns(int index)
+        {
+            spawnedPawns[index].RemoveWhere(x => x.Dead || !x.Spawned);
         }
         public int GroupStrength(int index)
         {
@@ -617,6 +618,13 @@ namespace BetterInfestations
             base.PostSpawnSetup(respawningAfterLoad);
 
             mapHiveData = parent.Map.GetComponent<HiveData_MapComponent>();
+            mapHiveData.RebuildHiveGrid();
+        }
+        public override void PostDestroy(DestroyMode mode, Map previousMap)
+        {
+            base.PostDestroy(mode, previousMap);
+
+            mapHiveData.RebuildHiveGrid();
         }
         public static Lord CreateNewLord(Thing byThing, Type lordJobType)
         {
@@ -669,9 +677,43 @@ namespace BetterInfestations
             int ticks = (int)(days * dayTicks);
             nextPawnSpawnTick[index] = Find.TickManager.TicksGame + ticks;
         }
-        private void FilterOutDeadPawns(int index)
+        public void UpdateMaxPawnLimits()
         {
-            spawnedPawns[index].RemoveWhere(x => x.Dead || !x.Spawned);
+            //float baseThreat = StorytellerUtility.DefaultThreatPointsNow(parent.Map);
+            ////float threatScore = InfestationUtility.CalculateThreat(baseThreat);
+            //float threatScore = baseThreat;
+            //float initialPawnsPoints = BetterInfestationsMod.settings.initialPawnsPoints;
+
+            //float points = threatScore / (float)hiveCount;
+            //points = Math.Max(initialPawnsPoints, points);
+            //Log.Message($"baseThreat = {baseThreat}, threatScore = {threatScore}, points = {points}");
+
+            //Log.Message($"Group strengths for {parent.ThingID} = {GroupStrength(0)} {GroupStrength(1)} {GroupStrength(2)}");
+            maxSpawnedPawnsPoints[0] = Math.Min(200f, 200f);
+            maxSpawnedPawnsPoints[1] = Math.Min(400f, 400f);
+            if (GroupStrength(1) > 400f)
+            {
+                maxSpawnedPawnsPoints[2] = Math.Min(400f, 400f);
+            }
+
+            //for (int i = 0; i < 3; i++)
+            //{
+            //    if (i == 0)
+            //    {
+            //        maxSpawnedPawnsPoints[i] = Math.Min(400f, 400f);
+            //        //Log.Message($"points = {points}, points for group {i} = {maxSpawnedPawnsPoints[i]}");
+            //    }
+            //    else if (maxSpawnedPawnsPoints[i] > 0)
+            //    {
+            //        maxSpawnedPawnsPoints[i] = Math.Min(300f, 300f);
+            //        //Log.Message($"points = {points}, points for group {i} = {maxSpawnedPawnsPoints[i]}");
+            //    }
+            //}
+
+            //if (GroupStrength(1) > 300f)
+            //{
+            //    maxSpawnedPawnsPoints[2] = 300f;
+            //}
         }
         private void ReassignNullDutyPawns()
         {
@@ -696,8 +738,6 @@ namespace BetterInfestations
                 }
             }
         }
-
-       
         [Obsolete]
         public PawnKindDef RandomPawnKindDef()
         {
@@ -724,7 +764,6 @@ namespace BetterInfestations
             }
             return null;
         }
-
         public PawnKindDef RandomWeightedPawnKindDef(float threatPoints = 0f)
         {
             var choices = new List<(PawnKindDef kind, float weight)>
@@ -760,47 +799,6 @@ namespace BetterInfestations
 
             return choices.RandomElementByWeight(c => c.weight).kind;
         }
-
-        public void UpdateMaxPawnLimits()
-        {
-            float baseThreat = StorytellerUtility.DefaultThreatPointsNow(parent.Map);
-            //float threatScore = InfestationUtility.CalculateThreat(baseThreat);
-            float threatScore = baseThreat;
-            float initialPawnsPoints = BetterInfestationsMod.settings.initialPawnsPoints;
-
-
-            //float points = threatScore / (float)hiveCount;
-            //points = Math.Max(initialPawnsPoints, points);
-            //Log.Message($"baseThreat = {baseThreat}, threatScore = {threatScore}, points = {points}");
-
-            //Log.Message($"Group strengths for {parent.ThingID} = {GroupStrength(0)} {GroupStrength(1)} {GroupStrength(2)}");
-            maxSpawnedPawnsPoints[0] = Math.Min(200f, 200f);
-            maxSpawnedPawnsPoints[1] = Math.Min(400f, 400f);
-            if (GroupStrength(1) > 400f)
-            {
-                maxSpawnedPawnsPoints[2] = Math.Min(400f, 400f);
-            }
-
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    if (i == 0)
-            //    {
-            //        maxSpawnedPawnsPoints[i] = Math.Min(400f, 400f);
-            //        //Log.Message($"points = {points}, points for group {i} = {maxSpawnedPawnsPoints[i]}");
-            //    }
-            //    else if (maxSpawnedPawnsPoints[i] > 0)
-            //    {
-            //        maxSpawnedPawnsPoints[i] = Math.Min(300f, 300f);
-            //        //Log.Message($"points = {points}, points for group {i} = {maxSpawnedPawnsPoints[i]}");
-            //    }
-            //}
-
-            //if (GroupStrength(1) > 300f)
-            //{
-            //    maxSpawnedPawnsPoints[2] = 300f;
-            //}
-        }
-
         public bool TrySpawnPawn(int index, out Pawn pawn, PawnKindDef chosenKind, bool newbornPawn)
         {
             if (chosenKind == null || BetterInfestationsMod.settings == null)
@@ -809,26 +807,27 @@ namespace BetterInfestations
                 return false;
             }
 
-            if (parent.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive).Count >= BetterInfestationsMod.settings.maxHivesPerMap)
+            // Total strength check if the number of hives is more than half
+            //if (parent.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive).Count >= 0.5 * BetterInfestationsMod.settings.maxHivesPerMap)
+            //{
+            float totalPower = 0f;
+            int validPawnCount = 0;
+            foreach (Pawn p in parent.Map.mapPawns.SpawnedPawnsInFaction(Faction.OfInsects))
             {
-                float totalPower = 0f;
-                int validPawnCount = 0;
-                foreach (Pawn p in parent.Map.mapPawns.SpawnedPawnsInFaction(Faction.OfInsects))
+                if (!p.Dead)
                 {
-                    if (!p.DestroyedOrNull() && !p.Dead)
-                    {
-                        validPawnCount++;
-                        totalPower += p.kindDef.combatPower;
-                    }
-                }
-
-                Log.Message($"Total power = {totalPower} for {validPawnCount} pawns");
-                if (totalPower > Math.Max(BetterInfestationsMod.settings.maxHivesPerMap * 1000f, 10000f))
-                {
-                    pawn = null;
-                    return false; 
+                    validPawnCount++;
+                    totalPower += p.kindDef.combatPower;
                 }
             }
+
+            Log.Message($"Total power = {totalPower} for {validPawnCount} pawns");
+            if (totalPower > Math.Max(BetterInfestationsMod.settings.maxHivesPerMap * 1000f, 10000f))
+            {
+                pawn = null;
+                return false;
+            }
+            //}
 
             if (!canSpawnPawns) newbornPawn = false;
             Hive hive = parent as Hive;
@@ -892,7 +891,7 @@ namespace BetterInfestations
                 //FilterOutUnspawnedPawns(i); // performance heavy!
                 if (Find.TickManager.TicksGame >= nextPawnSpawnTick[i])
                 {
-                    if (TotalStrength() > 1200f)
+                    if (TotalStrength() > InfestationUtility.CalculateHiveTimeFactor(parent.TickSpawned.TicksToDays()) * 1200f)
                     {
                         //Log.Message($"Total strength of {parent.ThingID} is {TotalStrength()}, greater than 1200f!");
                         return;
@@ -907,7 +906,7 @@ namespace BetterInfestations
                             pawn.caller.DoCall();
                         }
                     }
-                    if (i == 0 && canSpawnPawns && SpawnedPawnsPoints(i) >= 500 && !queenSpawned && BetterInfestationsMod.settings.queensAllowed && Rand.Range(1, 100) <= 30)
+                    if (i == 0 && canSpawnPawns && !queenSpawned && BetterInfestationsMod.settings.queensAllowed && Rand.Range(1, 100) <= 30 && TotalStrength() >= 1000)
                     {
                         if (TrySpawnPawn(i, out Pawn q, PawnKindDefOf.BI_Queen, BetterInfestationsMod.settings.newbornInsects) && q.caller != null)
                         {
@@ -935,11 +934,12 @@ namespace BetterInfestations
                         int dist = IntVec3Utility.ManhattanDistanceFlat(p.Position, patrolLoc[index]);
                         if (dist > 8)
                         {
-                            bool alseep = p.jobs.posture == PawnPosture.LayingOnGroundNormal;
+                            bool asleep = p.jobs.posture == PawnPosture.LayingOnGroundNormal;
                             bool atWork = p.jobs.curJob != null && p.jobs.curJob.targetA != null && p.jobs.curJob.targetA != patrolLoc[index];
-                            if (!alseep && !atWork)
+                            if (!asleep && !atWork)
                             {
-                                waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                                // Waits for group to regroup if a pawn is behind and not sleeping or busy
+                                waitTicks[index] = Find.TickManager.TicksGame + 1200;
                                 return;
                             }
                         }
@@ -949,52 +949,43 @@ namespace BetterInfestations
                     {
                         if (waitForOrders[index])
                         {
-                            if (Rand.Range(1, 100) <= 40)
+                            if (Rand.Range(1, 100) <= 30)
                             {
+                                // 30% chance of waiting at current location
                                 waitForOrders[index] = false;
-                                waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                                waitTicks[index] = Find.TickManager.TicksGame + 900;
                                 return;
                             }
                         }
                         else
                         {
                             IntVec3 pos = IntVec3.Invalid;
-                            if (Rand.Range(1, 100) <= 5)
+                            //if (Rand.Range(1, 100) <= 0) // Currently 0% chance
+                            //{
+                            //    // GetColonyStockpileSpot not working! Commented out for now.
+                            //    pos = HiveUtility.GetColonyStockpileSpot(pawn.Map);
+                            //    if (pos != IntVec3.Invalid && pawn.CanReserve(pos))
+                            //    {
+                            //        patrolLoc[index] = pos;
+                            //        patrolLocomotion[index] = LocomotionUrgency.Jog;
+                            //        waitForOrders[index] = true;
+                            //        waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                            //        return;
+                            //    }
+                            //}
+                            //else
+                            //{
+                            pos = HiveUtility.FindPathToPrey(pawn);
+                            if (pos != IntVec3.Invalid && pawn.CanReserve(pos))
                             {
-                                pos = HiveUtility.GetColonyStockpileSpot(pawn.Map);
-                                if (pos != IntVec3.Invalid && pawn.CanReserve(pos))
-                                {
-                                    patrolLoc[index] = pos;
-                                    patrolLocomotion[index] = LocomotionUrgency.Jog;
-                                    waitForOrders[index] = true;
-                                    waitTicks[index] = Find.TickManager.TicksGame + 1000;
-                                    return;
-                                }
+                                // Patrol towards prey
+                                patrolLoc[index] = pos;
+                                patrolLocomotion[index] = LocomotionUrgency.Jog;
+                                waitForOrders[index] = true;
+                                waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                                return;
                             }
-                            else
-                            {
-                                //Log.Message($"Strong path to prey");
-                                pos = HiveUtility.FindPathToPrey(pawn);
-                                if (pos != IntVec3.Invalid && pawn.CanReserve(pos))
-                                {
-                                    patrolLoc[index] = pos;
-                                    patrolLocomotion[index] = LocomotionUrgency.Walk;
-                                    waitForOrders[index] = true;
-                                    waitTicks[index] = Find.TickManager.TicksGame + 1000;
-                                    return;
-                                }
-                                //else if (pos == IntVec3.Invalid)
-                                //{
-                                //    if (CellFinder.TryFindRandomReachableNearbyCell(pawn.Position, pawn.Map, 10, TraverseParms.For(pawn, Danger.Deadly, TraverseMode.ByPawn, canBashDoors: true, canBashFences: true), null, null, out pos))
-                                //    {
-                                //        patrolLoc[index] = pos;
-                                //        patrolLocomotion[index] = LocomotionUrgency.Amble;
-                                //    }
-                                //    waitForOrders[index] = true;
-                                //    waitTicks[index] = Find.TickManager.TicksGame + 1000;
-                                //    return;
-                                //}
-                            }
+                            //}
                         }
                     }
                 }
@@ -1006,10 +997,11 @@ namespace BetterInfestations
                         int dist = IntVec3Utility.ManhattanDistanceFlat(p.Position, patrolLoc[index]);
                         if (dist > 8)
                         {
-                            bool alseep = p.jobs.posture == PawnPosture.LayingOnGroundNormal;
+                            bool asleep = p.jobs.posture == PawnPosture.LayingOnGroundNormal;
                             bool atWork = p.jobs.curJob != null && p.jobs.curJob.targetA != null && p.jobs.curJob.targetA != patrolLoc[index];
-                            if (!alseep && !atWork)
+                            if (!asleep && !atWork)
                             {
+                                // Waits for group to regroup if a pawn is behind and not sleeping or busy
                                 waitTicks[index] = Find.TickManager.TicksGame + 1000;
                                 return;
                             }
@@ -1020,10 +1012,11 @@ namespace BetterInfestations
                     {
                         if (waitForOrders[index])
                         {
-                            if (Rand.Range(1, 100) <= 40)
+                            if (Rand.Range(1, 100) <= 30)
                             {
+                                // 30% chance of waiting at current location
                                 waitForOrders[index] = false;
-                                waitTicks[index] = Find.TickManager.TicksGame + 1000;
+                                waitTicks[index] = Find.TickManager.TicksGame + 900;
                                 return;
                             }
                         }
@@ -1035,6 +1028,7 @@ namespace BetterInfestations
                                 pos = HiveUtility.GetHive(pawn).Position;
                                 if (pos != IntVec3.Invalid && pawn.CanReserve(pos))
                                 {
+                                    // 5% chance of returning to hive
                                     patrolLoc[index] = pos;
                                     patrolLocomotion[index] = LocomotionUrgency.Walk;
                                     waitForOrders[index] = true;
@@ -1044,36 +1038,26 @@ namespace BetterInfestations
                             }
                             else
                             {
-                                //Log.Message($"Weak path to prey");
                                 pos = HiveUtility.FindPathToPrey(pawn);
                                 if (pos != IntVec3.Invalid && pawn.CanReserve(pos))
                                 {
+                                    // Patrol towards prey
                                     patrolLoc[index] = pos;
                                     patrolLocomotion[index] = LocomotionUrgency.Walk;
                                     waitForOrders[index] = true;
                                     waitTicks[index] = Find.TickManager.TicksGame + 1000;
                                     return;
                                 }
-                                //else if (pos == IntVec3.Invalid)
-                                //{
-                                //    if (CellFinder.TryFindRandomReachableNearbyCell(pawn.Position, pawn.Map, 30, TraverseParms.For(pawn, Danger.Deadly, TraverseMode.ByPawn, canBashDoors: true, canBashFences: true),null, null, out pos))
-                                //    {
-                                //        patrolLoc[index] = pos;
-                                //        patrolLocomotion[index] = LocomotionUrgency.Amble;
-                                //    }
-                                //    waitForOrders[index] = true;
-                                //    waitTicks[index] = Find.TickManager.TicksGame + 1000;
-                                //    return;
-                                //}
                             }
                         }
                     }
                 }
-                else if (Find.TickManager.TicksGame > waitTicks[index])
+                else
                 {
-                    waitTicks[index] = Find.TickManager.TicksGame + 7500;
+                    // If not strong enough, wait in hive for more pawns to spawn
+                    waitTicks[index] = Find.TickManager.TicksGame + 7200;
                     patrolLoc[index] = parent.Position;
-                    patrolLocomotion[index] = LocomotionUrgency.Walk;
+                    patrolLocomotion[index] = LocomotionUrgency.Amble;
                     return;
                 }
             }

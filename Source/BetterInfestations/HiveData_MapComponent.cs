@@ -1,19 +1,40 @@
-﻿using System;
+﻿using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 using Verse;
 
 namespace BetterInfestations
 {
     public class HiveData_MapComponent : MapComponent
     {
-        public Dictionary<Pawn, Hive> pawnToHiveDict = new Dictionary<Pawn, Hive>();
+        public Dictionary<Pawn, Hive> pawnToHiveDict;
+        public BoolGrid withinHiveGrid;
 
         public HiveData_MapComponent(Map map) : base(map)
         {
             pawnToHiveDict = new Dictionary<Pawn, Hive>();
+            withinHiveGrid = new BoolGrid(map);
+        }
+
+        public void RebuildHiveGrid(float radius = 8)
+        {
+            withinHiveGrid.Clear();
+
+            foreach (Thing h in map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
+            {
+                if (h.DestroyedOrNull()) continue;
+                foreach (IntVec3 c in GenRadial.RadialCellsAround(h.Position, radius, true))
+                {
+                    if (c.InBounds(map))
+                    {
+                        withinHiveGrid.Set(c, true);
+                    }
+                }
+            }
         }
 
         public void AddPawnHiveData(Pawn pawn, Hive hive)
@@ -28,11 +49,6 @@ namespace BetterInfestations
         {
             //Log.Message($"Removed pawn {pawn.ThingID} from pawnToHiveDict!");
             pawnToHiveDict.Remove(pawn);
-        }
-
-        public void RegeneratePawnsFromHive(Pawn pawn, Hive hive)
-        {
-            // placeholder
         }
 
         public void RemovePawnHiveDataSweep()

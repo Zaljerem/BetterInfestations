@@ -6,18 +6,34 @@ namespace BetterInfestations
 {
     public static class InfestationUtility
     {
-        public static readonly SimpleCurve PointsFactorCurve = new SimpleCurve
+        public static readonly SimpleCurve GenPointsFactorCurve = new SimpleCurve
         {
            new CurvePoint(0f, 0.7f),
            new CurvePoint(2000f, 0.55f),
            new CurvePoint(5000f, 0.45f)
         };
 
+        public static readonly SimpleCurve HiveTimeFactorCurveDays = new SimpleCurve
+        {
+           new CurvePoint(0f, 0.3f),
+           new CurvePoint(3f, 0.6f),
+           new CurvePoint(10f, 0.9f),
+           new CurvePoint(15f, 1.0f)
+        };
+
+        public static float CalculateHiveTimeFactor(float timeDays)
+        {
+            float factor;
+            if (timeDays > 15f) factor = 1.0f;
+            else factor = GenPointsFactorCurve.Evaluate(timeDays);
+            Log.Message(factor);
+            return factor;
+        }
         public static float CalculateThreat(float baseThreat)
         {
             //Log.Message($"[BI] Base threat points: {baseThreat}");
 
-            float curvedThreat = baseThreat * PointsFactorCurve.Evaluate(baseThreat);
+            float curvedThreat = baseThreat * GenPointsFactorCurve.Evaluate(baseThreat);
 
             //Log.Message($"[BI] Curved threat points: {curvedThreat}");
 

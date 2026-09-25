@@ -1,6 +1,7 @@
 using RimWorld;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Reflection;
 using Verse;
@@ -110,24 +111,18 @@ namespace BetterInfestations
 
             HiveData_MapComponent mapHiveData = pawn.Map.GetComponent<HiveData_MapComponent>();
 
-            if (mapHiveData.pawnToHiveDict.TryGetValue(pawn, out Hive hive) || NearOtherHive)
+            if (mapHiveData.pawnToHiveDict.TryGetValue(pawn, out Hive hive))
             {
-                int dist = IntVec3Utility.ManhattanDistanceFlat(hive.Position, thing.Position);
-                if (dist <= 8) return true;
-            };
-
-            //foreach (Thing t in pawn.Map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
-            //{
-            //    hive = t as Hive;
-            //    if (hive != null)
-            //    {
-            //        if (PawnFromHive(hive, pawn) || NearOtherHive)
-            //        {
-            //            int dist = IntVec3Utility.ManhattanDistanceFlat(hive.Position, thing.Position);
-            //            if (dist <= 8) return true;
-            //        }
-            //    }
-            //}
+                if (thing.Position.DistanceTo(hive.Position) <= 8) return true;
+            }
+            if (NearOtherHive)
+            {
+                if (mapHiveData.withinHiveGrid[thing.Position] == true)
+                {
+                    //Log.Message($"{thing.ThingID} at {thing.Position} within hive grid!");
+                    return true;
+                }
+            }
             return false;
         }
         public static HashSet<Pawn> AllHivePawns(Hive hive)
@@ -253,18 +248,20 @@ namespace BetterInfestations
         {
             if (pawn != null && pawn.Downed) return IntVec3.Invalid;
             List<Thing> targetList = new List<Thing>();
+            Faction targetFaction;
 
             foreach (Thing t in pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree))
             {
                 if (!t.DestroyedOrNull() && (t.def != ThingDefOf.InsectJelly) && !t.def.IsCorpse && !t.IsBurning() && !t.Fogged())
                 {
                     targetList.Add(t);
-                    Log.Message(t.ThingID);
+                    //Log.Message(t.ThingID);
                 }
             }
             foreach (Pawn p in pawn.Map.mapPawns.AllPawnsSpawned.ToList())
             {
-                if (!p.DestroyedOrNull() && !p.Dead && (p.Faction == null || (p.Faction != null && p.Faction != pawn.Faction && p.Faction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
+                targetFaction = p.Faction;
+                if (!p.DestroyedOrNull() && !p.Dead && (targetFaction == null || (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect")) && !p.IsBurning() && !p.Fogged())
                 {
                     targetList.Add(p);
                 }
@@ -273,7 +270,8 @@ namespace BetterInfestations
             {
                 if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && !c.IsDessicated() && !c.IsBurning() && !c.Fogged())
                 {
-                    if (c.InnerPawn.Faction != null && c.InnerPawn.Faction != pawn.Faction && c.InnerPawn.Faction.def.defName != "VFEI_Insect")
+                    targetFaction = c.InnerPawn.Faction;
+                    if (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect")
                     {
                         targetList.Add(c);
                     }
@@ -292,7 +290,7 @@ namespace BetterInfestations
                 return false;
             };
             //Log.Message($"Finding thing in list of {targetList.Count}");
-            result = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, targetList, PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassAllDestroyableThings, Danger.Deadly, false), 200, validator);
+            result = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, targetList, PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassAllDestroyableThings, Danger.Deadly, false), pawn.Map.Size.LengthHorizontal, validator);
             if (result == null) return IntVec3.Invalid;
 
             Log.Message($"Finding path to {result.ThingID}");

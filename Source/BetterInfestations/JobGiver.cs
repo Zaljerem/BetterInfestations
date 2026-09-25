@@ -109,6 +109,7 @@ namespace BetterInfestations
         {
             wanderRadius = 8f;
             ticksBetweenWandersRange = new IntRange(120, 240);
+            locomotionUrgency = LocomotionUrgency.Amble;
         }
         protected override IntVec3 GetWanderRoot(Pawn pawn)
         {
@@ -265,8 +266,7 @@ namespace BetterInfestations
                 Corpse c = t as Corpse;
                 if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
                 {
-                    if (HiveUtility.WithinHive(pawn, c, false) && pawn.CanReserve(c))
-                    //if (pawn.CanReserve(c))
+                    if (HiveUtility.WithinHive(pawn, c, true) && pawn.CanReserve(c))
                     {
                         return true;
                     }
@@ -281,8 +281,7 @@ namespace BetterInfestations
             {
                 if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
                 {
-                    if (HiveUtility.WithinHive(pawn, t, false) && t.def.defName != RimWorld.ThingDefOf.InsectJelly.defName && pawn.CanReserve(t))
-                    //if (t.def.defName != RimWorld.ThingDefOf.InsectJelly.defName && pawn.CanReserve(t))
+                    if (t.def != RimWorld.ThingDefOf.InsectJelly && HiveUtility.WithinHive(pawn, t, true) && pawn.CanReserve(t))
                     {
                         return true;
                     }
@@ -337,14 +336,19 @@ namespace BetterInfestations
         public static Thing FindTarget(Pawn pawn)
         {
             Thing result = null;
+            Faction targetFaction;
+
             Predicate<Thing> validator = delegate (Thing t)
             {
+                if (t.def == RimWorld.ThingDefOf.InsectJelly) return false;
+
                 Corpse c = t as Corpse;
                 if (c != null && c.InnerPawn != null && c.InnerPawn.RaceProps.IsFlesh && c.GetRotStage() != RotStage.Dessicated && !c.IsBurning() && !c.Fogged())
                 {
                     if (!HiveUtility.WithinHive(pawn, c, true))
                     {
-                        if ((c.InnerPawn.Faction == null || (c.InnerPawn.Faction != null && c.InnerPawn.Faction != pawn.Faction && c.InnerPawn.Faction.def.defName != "VFEI_Insect")) && pawn.CanReserve(c))
+                        targetFaction = c.InnerPawn.Faction;
+                        if ((targetFaction == null || (targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect")) && pawn.CanReserve(c))
                         {
                             return true;
                         }
@@ -357,6 +361,8 @@ namespace BetterInfestations
 
             validator = delegate (Thing t)
             {
+                if (t.def == RimWorld.ThingDefOf.InsectJelly) return false;
+
                 if (t != null && t.def.category == ThingCategory.Item && !t.def.IsCorpse && t.IngestibleNow && !t.IsBurning() && !t.Fogged())
                 {
                     if (!HiveUtility.WithinHive(pawn, t, true) && pawn.CanReserve(t))
@@ -371,6 +377,8 @@ namespace BetterInfestations
 
             validator = delegate (Thing t)
             {
+                if (t.def == RimWorld.ThingDefOf.InsectJelly) return false;
+
                 Pawn p = t as Pawn;
                 if (p != null && p.Downed && p.RaceProps.IsFlesh && !p.RaceProps.DeathActionWorker.DangerousInMelee && !p.IsBurning() && !p.Fogged())
                 {
@@ -437,7 +445,7 @@ namespace BetterInfestations
                     return JobGiver_Hunt.ForceJob(pawn);
                 }
             }
-            if (!HiveUtility.JobsGivenRecentTick(pawn, "BI_HaulToCell"))
+            if (!HiveUtility.JobsGivenRecentTick(pawn, "HaulToCell"))
             {
                 target = JobGiver_Gather.FindTarget(pawn);
                 if (target != null)
@@ -510,6 +518,7 @@ namespace BetterInfestations
         public static Thing FindTarget(Pawn pawn)
         {
             Thing result = null;
+            Faction targetFaction;
             Predicate<Thing> validator = delegate (Thing t)
             {
                 Building_Turret b = t as Building_Turret;
@@ -537,7 +546,9 @@ namespace BetterInfestations
             validator = delegate (Thing t)
             {
                 Pawn p = t as Pawn;
-                if (!p.DestroyedOrNull() && !p.IsBurning() && ((p.Faction != null && p.Faction != pawn.Faction && p.Faction.def.defName != "VFEI_Insect") || p.Faction == null) && !p.Downed && pawn.CanReserve(p) && !p.Fogged())
+                if (p == null) return false;
+                targetFaction = p.Faction;
+                if (!p.DestroyedOrNull() && !p.IsBurning() && ((targetFaction != null && targetFaction != pawn.Faction && targetFaction.def.defName != "VFEI_Insect") || targetFaction == null) && !p.Downed && pawn.CanReserve(p) && !p.Fogged())
                 {
                     return true;
                 }
