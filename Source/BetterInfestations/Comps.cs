@@ -571,8 +571,6 @@ namespace BetterInfestations
         public int[] waitTicks = { 0, 0, 0, 0 };
         public int reassignPawnTick = -1;
 
-        public int numGroups = 4;
-
         public CompProperties_SpawnerPawns Props => (CompProperties_SpawnerPawns)props;
 
         public float SpawnedPawnsPoints(int index)
@@ -645,18 +643,30 @@ namespace BetterInfestations
         }
         private void FilterOutUnspawnedPawns(int index)
         {
-            spawnedPawns[index].RemoveWhere(x => !x.Spawned);
+            if (Find.TickManager.TicksGame % 60 != 0) return;
+
+            HiveData_MapComponent mapHiveData = parent.Map.GetComponent<HiveData_MapComponent>();
+            spawnedPawns[index].RemoveWhere(x =>
+            { 
+                if(!x.Spawned)
+                {
+                    mapHiveData?.pawnToHiveDict.Remove(x);
+                    return true;
+                }
+                return false;
+            });
+
         }
         private void ReassignNullDutyPawns()
         {
-            foreach (Pawn p in parent.Map.mapPawns.SpawnedPawnsInFaction(Faction.OfInsects))
+            foreach (Pawn p in parent.Map.mapPawns.SpawnedPawnsInFaction(parent.Faction))
             {
                 if (p != null && !p.Downed && p.mindState.duty == null)
                 {
                     for (int i = 0; i < 4; i++)
                     {
                         Lord lord = Lord[i];
-                        if (Lord == null) continue;
+                        if (lord == null) continue;
 
                         if (lord.ownedPawns != null && !lord.ownedPawns.Contains(p) && spawnedPawns[i].Contains(p))
                         {
@@ -754,6 +764,9 @@ namespace BetterInfestations
             }
             GenSpawn.Spawn(pawn, CellFinder.RandomClosewalkCellNear(parent.Position, parent.Map, 2), parent.Map);
             spawnedPawns[index].Add(pawn);
+            pawn.Map.GetComponent<HiveData_MapComponent>().AddPawnHiveData(pawn, (Hive)parent);
+            Log.Message($"{pawn.Map.GetComponent<HiveData_MapComponent>().pawnToHiveDict.Count}");
+
             Lord lord = Lord[index];
             if (lord == null)
             {

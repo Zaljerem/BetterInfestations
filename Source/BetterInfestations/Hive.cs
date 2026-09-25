@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -131,8 +132,8 @@ namespace BetterInfestations
 
         public override bool PreventPlayerSellingThingsNearby(out string reason)
         {
-            List<Pawn> pawns = HiveUtility.AllHivePawns(this);
-            if (pawns.Count > 0 && pawns.Any((Pawn p) => !p.Downed))
+            HashSet<Pawn> pawns = HiveUtility.AllHivePawns(this);
+            if (pawns.Count > 0 && pawns.Where(p => !p.Downed).Any())
             {
                 reason = def.label;
                 return true;
