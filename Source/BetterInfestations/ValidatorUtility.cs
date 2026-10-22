@@ -79,9 +79,10 @@ namespace BetterInfestations
 
         public static Predicate<Thing> itemValidator(Pawn pawn, bool skipJelly = true, bool lookWithinHive = false) => delegate (Thing t)
         {
+            // Reject a missing target before inspecting its definition.
+            if (t == null) return false;
             if (skipJelly) { if (t.def == RimWorld.ThingDefOf.InsectJelly) return false; }
 
-            if (t == null) return false;
             if (t.def.category != ThingCategory.Item) return false;
             if (t.def.IsCorpse) return false;
             if (!t.IngestibleNow) return false;

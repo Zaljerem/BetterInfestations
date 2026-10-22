@@ -1,4 +1,3 @@
-using RimWorld;
 using Verse;
 using Verse.AI.Group;
 
@@ -65,6 +64,8 @@ namespace BetterInfestations
             transition.AddPostAction(new TransitionAction_EndAllJobs());
             stateGraph.AddTransition(transition);
             Transition transition2 = new Transition(lordToil_HiveHunters, lordToil_AssaultColony);
+            // Hunters can lose their hive while already defending it aggressively.
+            transition2.AddSource(lordToil_DefendHiveAggressively);
             transition2.AddTrigger(new Trigger_Memo(Hive.MemoDeSpawned));
             transition2.AddTrigger(new Trigger_Memo(Hive.MemoDestroyedNonRoofCollapse));
             transition2.AddPostAction(new TransitionAction_EndAllJobs());

@@ -30,6 +30,14 @@ namespace BetterInfestations
     public class ExterminateBugsComp : WorldObjectComp
     {
         private bool active = true;
+        public override void PostExposeData()
+        {
+            base.PostExposeData();
+            // Persist completion so reloading a defeated site cannot award goodwill a second time.
+            // Old saves without this key retain the original active-by-default behavior.
+            Scribe_Values.Look(ref active, "active", true);
+        }
+
         public override void CompTick()
         {
             base.CompTick();

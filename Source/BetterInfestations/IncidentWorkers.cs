@@ -1,6 +1,6 @@
 using RimWorld;
 using RimWorld.Planet;
-using UnityEngine;
+using Waylith.Math;
 using Verse;
 using Verse.AI.Group;
 using System;
@@ -13,7 +13,8 @@ namespace BetterInfestations
         public const float HivePoints = 220f;
         protected override bool CanFireNowSub(IncidentParms parms)
         {
-            if (BetterInfestationsMod.settings != null)
+            // Disabled events should not enter the storyteller's eligible incident pool.
+            if (BetterInfestationsMod.settings != null && BetterInfestationsMod.settings.infestationsAllowed)
             {
                 Map map = (Map)parms.target;
                 if (base.CanFireNowSub(parms) && HiveUtility.TotalSpawnedHivesCount(map) < BetterInfestationsMod.settings.maxHivesPerMap)
@@ -50,7 +51,8 @@ namespace BetterInfestations
     {
         protected override bool CanFireNowSub(IncidentParms parms)
         {
-            if (BetterInfestationsMod.settings != null)
+            // Match the execution-time setting before doing expensive eligibility checks.
+            if (BetterInfestationsMod.settings != null && BetterInfestationsMod.settings.swarmingHordeEventAllowed)
             {
                 Map map = (Map)parms.target;
                 if (base.CanFireNowSub(parms) && HiveUtility.SwarmingHordeCheck(map))
@@ -112,6 +114,8 @@ namespace BetterInfestations
         public static float accumPoints = 0f;
         protected override bool CanFireNowSub(IncidentParms parms)
         {
+            // Respect disabled raids during selection as well as execution.
+            if (BetterInfestationsMod.settings == null || !BetterInfestationsMod.settings.raidsAllowed) return false;
             if (!base.CanFireNowSub(parms))
             {
                 return false;

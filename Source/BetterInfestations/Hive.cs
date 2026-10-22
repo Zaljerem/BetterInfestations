@@ -66,15 +66,14 @@ namespace BetterInfestations
 
         public override void Destroy(DestroyMode mode = DestroyMode.Vanish)
         {
-            for (int i = 0; i < 3; i++)
+            // Keep surviving groups registered: base.Destroy invokes DeSpawn, whose memo moves
+            // them to assault duties. RemoveLord would instead clear their duties and ownership.
+            // A hive destroyed while unspawned has no map on which to check quest completion.
+            if (!Spawned || Destroyed)
             {
-                Lord lord = CompSpawnerPawns.Lord[i];
-                if (lord != null)
-                {
-                    Map.lordManager.RemoveLord(lord);
-                }
+                base.Destroy(mode);
+                return;
             }
-
             bool flag = false;
             List<Thing> list = Map.listerThings.ThingsOfDef(def);
             for (int i = 0; i < list.Count; i++)

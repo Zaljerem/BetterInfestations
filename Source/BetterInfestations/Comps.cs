@@ -1,14 +1,12 @@
 using RimWorld;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
+using Waylith.Math;
 using Verse;
 using Verse.AI;
 using Verse.AI.Group;
-using Verse.Noise;
 using Verse.Sound;
 
 namespace BetterInfestations
@@ -170,12 +168,18 @@ namespace BetterInfestations
             if (TryFindSpawnCell(parent, PropsSpawner.thingToSpawn, spawnCount, out IntVec3 result))
             {
                 Thing thing = ThingMaker.MakeThing(PropsSpawner.thingToSpawn);
-                thing.stackCount = spawnCount;
                 if (thing == null)
                 {
                     Log.Error("Could not spawn anything for " + parent);
+                    // A failed creation must stop before accessing or placing the missing thing.
+                    return false;
                 }
-                GenPlace.TryPlaceThing(thing, result, parent.Map, ThingPlaceMode.Near, out Thing lastResultingThing);
+                thing.stackCount = spawnCount;
+                // Placement can fail even after a suitable cell was found; report failure safely.
+                if (!GenPlace.TryPlaceThing(thing, result, parent.Map, ThingPlaceMode.Near, out Thing lastResultingThing) || lastResultingThing == null)
+                {
+                    return false;
+                }
                 lastResultingThing.SetForbidden(value: true);
                 if (PropsSpawner.showMessageIfOwned && parent.Faction == Faction.OfPlayer)
                 {
@@ -576,7 +580,8 @@ namespace BetterInfestations
         }
         private void FilterOutDeadPawns(int index)
         {
-            spawnedPawns[index].RemoveWhere(x => x.Dead || !x.Spawned);
+            // Discard unresolved references and pawns that have left this hive's map as well.
+            spawnedPawns[index].RemoveWhere(x => x.DestroyedOrNull() || x.Dead || !x.Spawned || x.Map != parent.Map);
         }
         public int GroupStrength(int index)
         {
@@ -615,12 +620,27 @@ namespace BetterInfestations
 
             mapHiveData = parent.Map.GetComponent<HiveData_MapComponent>();
             mapHiveData.RebuildHiveGrid();
+            // Restore retained membership when an existing hive is spawned again.
+            foreach (HashSet<Pawn> group in spawnedPawns)
+            {
+                if (group == null) continue;
+                foreach (Pawn pawn in group) mapHiveData.AddPawnHiveData(pawn, (Hive)parent);
+            }
+        }
+        public override void PostDeSpawn(Map map, DestroyMode mode = DestroyMode.Vanish)
+        {
+            base.PostDeSpawn(map, mode);
+            // ThingWithComps invokes this after removing the hive from its map lister.
+            HiveData_MapComponent data = map.GetComponent<HiveData_MapComponent>();
+            data.RebuildHiveGrid();
+            data.RemovePawnHiveDataSweep();
         }
         public override void PostDestroy(DestroyMode mode, Map previousMap)
         {
             base.PostDestroy(mode, previousMap);
 
-            mapHiveData.RebuildHiveGrid();
+            // Unspawned hives may be destroyed without ever having cached map data.
+            previousMap?.GetComponent<HiveData_MapComponent>()?.RebuildHiveGrid();
         }
         public static Lord CreateNewLord(Thing byThing, Type lordJobType)
         {
@@ -844,7 +864,9 @@ namespace BetterInfestations
                 if (Find.TickManager.TicksGame >= nextPawnSpawnTick[i])
                 {
                     // Gate next spawn if hive too strong
-                    if (TotalStrength() > InfestationUtility.CalculateHiveTimeFactor((Find.TickManager.TicksSinceSettle - parent.TickSpawned).TicksToDays()) * 1200f)
+                    // The supplied assembly records TickSpawned in TicksGame, not TicksSinceSettle.
+                    // Using one time origin prevents a later settlement from resetting hive growth.
+                    if (TotalStrength() > InfestationUtility.CalculateHiveTimeFactor((Find.TickManager.TicksGame - parent.TickSpawned).TicksToDays()) * 1200f)
                     {
                         //Log.Message($"Total strength of {parent.ThingID} is {TotalStrength()}, greater than {InfestationUtility.CalculateHiveTimeFactor((Find.TickManager.TicksSinceSettle - parent.TickSpawned).TicksToDays()) * 1200f}!");
                         CalculateNextPawnSpawnTick(i);
@@ -865,10 +887,11 @@ namespace BetterInfestations
                     // Try spawn queen
                     if (i == 0 && canSpawnPawns && !queenSpawned && BetterInfestationsMod.settings.queensAllowed && Rand.Range(1, 100) <= 30 && TotalStrength() >= 900)
                     {
-                        if (TrySpawnPawn(i, out Pawn q, PawnKindDefOf.BI_Queen, BetterInfestationsMod.settings.newbornInsects) && q.caller != null)
+                        // Successful spawning owns the queen flag; a sound caller is optional.
+                        if (TrySpawnPawn(i, out Pawn q, PawnKindDefOf.BI_Queen, BetterInfestationsMod.settings.newbornInsects))
                         {
                             Messages.Message("A bug queen has spawned.", q, MessageTypeDefOf.NegativeEvent);
-                            q.caller.DoCall();
+                            q.caller?.DoCall();
                             queenSpawned = true;
                         }
                     }
@@ -998,7 +1021,9 @@ namespace BetterInfestations
                             IntVec3 pos = IntVec3.Invalid;
                             if (Rand.Range(1, 100) <= 5)
                             {
-                                pos = HiveUtility.GetHive(pawn).Position;
+                                // Fall back to this live hive if the pawn's cached home is missing.
+                                Hive home = HiveUtility.GetHive(pawn);
+                                pos = home != null ? home.Position : parent.Position;
                                 if (pos != IntVec3.Invalid && pawn.CanReserve(pos))
                                 {
                                     // 5% chance of returning to hive
@@ -1183,6 +1208,8 @@ namespace BetterInfestations
             {
                 for (int i = 0; i < 3; i++)
                 {
+                    // Missing group keys in older saves may deserialize as null collections.
+                    if (spawnedPawns[i] == null) spawnedPawns[i] = new HashSet<Pawn>();
                     spawnedPawns[i].RemoveWhere(x => x == null);
                 }
             }

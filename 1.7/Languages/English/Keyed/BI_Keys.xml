@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <BI_ModName>Better Infestations</BI_ModName>
+  
+  <BI_General>General</BI_General>
+  <BI_AllowInfestations>Allow infestations</BI_AllowInfestations>
+  <BI_AllowRaidingInsects>Allow raiding insects</BI_AllowRaidingInsects>
+  <BI_AllowSwarmingHorde>Allow swarming horde event</BI_AllowSwarmingHorde>
+  <BI_CorpsesProduceLeather>Butchered corpses produce leather</BI_CorpsesProduceLeather>
+  <BI_InfestationNotify>Notification of Infestation</BI_InfestationNotify>
+  <BI_QueenSpawnInterval>Queen: Interval to spawn additional hives</BI_QueenSpawnInterval>
+  <BI_HiveSpawnInterval>Hive: Interval to reproduce additional hives</BI_HiveSpawnInterval>
+  <BI_HiveSettings>Hive settings</BI_HiveSettings>
+  <BI_SpawnQueens>Spawn queens</BI_SpawnQueens>
+  <BI_SpawnNewborns>Spawn newborns</BI_SpawnNewborns>
+  <BI_MaxHives>Maximum hives per map</BI_MaxHives>
+  <BI_InitialHuntingParties>Initial number of hunting parties</BI_InitialHuntingParties>
+  <BI_InitialSpawnPoints>Initial spawn points per group</BI_InitialSpawnPoints>
+  <BI_HiveDefenseSpawnIntervals>Hive: Defense group spawn intervals</BI_HiveDefenseSpawnIntervals>
+  <BI_MinInterval>Minimum interval</BI_MinInterval>
+  <BI_MaxInterval>Maximum interval</BI_MaxInterval>
+  <BI_Days>Days</BI_Days>
+  <BI_HunterGroupOneSpawnIntervals>Hive: Hunter group 1 spawn intervals</BI_HunterGroupOneSpawnIntervals>
+  <BI_HunterGroupTwoSpawnIntervals>Hive: Hunter group 2 spawn intervals</BI_HunterGroupTwoSpawnIntervals>
+  <BI_Difficulty>Difficulty settings</BI_Difficulty>
+  <BI_Easy>Easy</BI_Easy>
+  <BI_Normal>Normal</BI_Normal>
+  <BI_Hard>Hard</BI_Hard>
+  <BI_Nightmare>Nightmare</BI_Nightmare>
+  <BI_UninstallOptions>Warning: Uninstall options below !!!</BI_UninstallOptions>
+  <BI_Uninstall>Uninstall</BI_Uninstall>
+  <BI_UninstallSuccess>Better Infestations uninstalled successfully!</BI_UninstallSuccess>
+
+  <BI_LetterInfestationDefeated>The {0} has been wiped out.</BI_LetterInfestationDefeated>
+  <BI_LetterLabelInfestationDefeated>Infestation removed</BI_LetterLabelInfestationDefeated>
+  <BI_LetterLabelInsectRaid>Raid: Insects</BI_LetterLabelInsectRaid>
+  <BI_LetterTextInsectRaid>The {0} from a nearby insect hive colony have arrived nearby.\n\nThey are attacking immediately.</BI_LetterTextInsectRaid>
+
+  <BI_InfestationsTip>You can choose whether or not to allow infestations from starting.</BI_InfestationsTip>
+  <BI_RaidingInsectsTip>Raiding insects can enter the map when this setting is enabled.</BI_RaidingInsectsTip>
+  <BI_SwarmingHordeTip>The swarming horde event is a follow up event to an infestation. If the infestation gets too large, a massive assault on the colony can trigger.</BI_SwarmingHordeTip>
+  <BI_NotificationTip>This is the setting for the time slow and letter notification that pops up when the infestation begins.</BI_NotificationTip>
+  <BI_SpawnInitialHuntersTip>This setting controls whether the hunting groups are allowed to initially spawn from the hive when it is created.</BI_SpawnInitialHuntersTip>
+  <BI_SpawnQueensTip>Queens can spawn from the hives when this is checked.</BI_SpawnQueensTip>
+  <BI_SpawnNewbornsTip>If this is enabled the insects that spawn from the hives will be newborns.</BI_SpawnNewbornsTip>
+  <BI_ProduceLeatherTip>When hive insects butcher corpses, they can produce leather.</BI_ProduceLeatherTip>
+  <BI_HiveLimitTip>Caution: Performance costs scale directly with number of hives. Things can get ridiculous above 30 hives!</BI_HiveLimitTip>
+  <BI_InitialScoreTip>Initial pawn strength is the number of groups times the initial spawn points.</BI_InitialScoreTip>
+  <BI_UninstallTip>This removes all traces of better infestations modifications for you to safely unsubscribe from the mod. ***BACKUP YOUR SAVE BEFORE USING!***</BI_UninstallTip>
+</LanguageData>

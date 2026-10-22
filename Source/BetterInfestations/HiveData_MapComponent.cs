@@ -1,10 +1,4 @@
-﻿using RimWorld;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using System.Collections.Generic;
 using Verse;
 
 namespace BetterInfestations
@@ -39,7 +33,8 @@ namespace BetterInfestations
 
         public void AddPawnHiveData(Pawn pawn, Hive hive)
         {
-            if (pawn.DestroyedOrNull() || hive.DestroyedOrNull()) return;
+            // Only index living pawns and hives currently on this component's map.
+            if (!IsValidAssociation(pawn, hive)) return;
 
             //Log.Message($"Added pawn {pawn.ThingID} to pawnToHiveDict! Size is {pawnToHiveDict.Count}");
             pawnToHiveDict[pawn] = hive;
@@ -47,6 +42,8 @@ namespace BetterInfestations
 
         public void RemovePawnHiveData(Pawn pawn)
         {
+            // Dictionary.Remove rejects null keys, including unresolved save references.
+            if (pawn == null) return;
             //Log.Message($"Removed pawn {pawn.ThingID} from pawnToHiveDict!");
             pawnToHiveDict.Remove(pawn);
         }
@@ -54,40 +51,50 @@ namespace BetterInfestations
         public void RemovePawnHiveDataSweep()
         {
             List<Pawn> pawnsToRemove = new List<Pawn>();
-            foreach (Pawn p in pawnToHiveDict.Keys)
+            foreach (KeyValuePair<Pawn, Hive> entry in pawnToHiveDict)
             {
-                if (p.DestroyedOrNull() || p.Dead)
+                // A surviving pawn must not retain a destroyed, despawned or off-map home.
+                if (!IsValidAssociation(entry.Key, entry.Value))
                 {
-                    pawnsToRemove.Add(p);
+                    pawnsToRemove.Add(entry.Key);
                 }
             }
-            if ( pawnsToRemove != null )
+            foreach (Pawn p in pawnsToRemove)
             {
-                foreach (Pawn p in pawnsToRemove)
-                {
-                    pawnToHiveDict.Remove(p);
-                    //Log.Message($"Removed pawn {p} from dict! Size is {pawnToHiveDict.Count}");
-                }
+                pawnToHiveDict.Remove(p);
             }
+        }
+
+        // Keep the same ownership rules for insertion, lookup and post-load cleanup.
+        public bool IsValidAssociation(Pawn pawn, Hive hive)
+        {
+            return !pawn.DestroyedOrNull() && !pawn.Dead && pawn.Spawned && pawn.Map == map
+                && !hive.DestroyedOrNull() && hive.Spawned && hive.Map == map;
         }
 
         public override void FinalizeInit()
         {
             base.FinalizeInit();
 
-            if (pawnToHiveDict.NullOrEmpty())
+            // Group membership is authoritative. Rebuild even a partially populated saved index,
+            // after references resolve, and tolerate missing components/collections in old saves.
+            pawnToHiveDict.Clear();
+            foreach (Thing thing in map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
             {
-                foreach (Hive hive in map.listerThings.ThingsOfDef(ThingDefOf.BI_Hive))
+                Hive hive = thing as Hive;
+                CompSpawnerPawns comp = hive?.CompSpawnerPawns;
+                if (comp == null) continue;
+                foreach (HashSet<Pawn> group in comp.spawnedPawns)
                 {
-                    for (int i = 0; i < 3; i++)
+                    if (group == null) continue;
+                    foreach (Pawn pawn in group)
                     {
-                        foreach (Pawn p in hive.TryGetComp<CompSpawnerPawns>()?.spawnedPawns[i])
-                        {
-                            AddPawnHiveData(p, hive);
-                        }
+                        AddPawnHiveData(pawn, hive);
                     }
                 }
             }
+            // The grid is derived data; never trust a stale serialized proximity cache.
+            RebuildHiveGrid();
         }
 
         public override void ExposeData()

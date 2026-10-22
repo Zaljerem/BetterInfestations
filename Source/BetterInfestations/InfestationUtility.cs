@@ -1,5 +1,5 @@
 using RimWorld;
-using UnityEngine;
+using Waylith.Math;
 using Verse;
 
 namespace BetterInfestations

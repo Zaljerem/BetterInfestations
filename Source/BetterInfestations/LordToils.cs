@@ -2,7 +2,6 @@ using RimWorld;
 using Verse;
 using Verse.AI;
 using Verse.AI.Group;
-using System.Collections.Generic;
 
 namespace BetterInfestations
 {
@@ -16,7 +15,8 @@ namespace BetterInfestations
                 for (int i = 0; i < lord.ownedPawns.Count; i++)
                 {
                     Hive hive = HiveUtility.GetHive(lord.ownedPawns[i]);
-                    if (hive == null) return;
+                    // Skip an orphan without preventing the rest of the group from receiving duties.
+                    if (hive == null) continue;
 
                     PawnDuty duty = new PawnDuty(DutyDefOf.BI_DefendAndExpandHive, hive, distToHiveToAttack);
                     if (duty == null) return;
@@ -36,7 +36,8 @@ namespace BetterInfestations
                 for (int i = 0; i < lord.ownedPawns.Count; i++)
                 {
                     Hive hive = HiveUtility.GetHive(lord.ownedPawns[i]);
-                    if (hive == null) return;
+                    // Skip an orphan without preventing the rest of the group from receiving duties.
+                    if (hive == null) continue;
 
                     PawnDuty duty = new PawnDuty(DutyDefOf.BI_DefendHiveAggressively, hive, distToHiveToAttack);
                     if (duty == null) return;

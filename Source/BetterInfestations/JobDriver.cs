@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using RimWorld;
 using Verse;
 using Verse.AI;
-using UnityEngine;
+using Waylith.Math;
 
 namespace BetterInfestations
 {
@@ -395,7 +395,9 @@ namespace BetterInfestations
             if (hive == null) return false;
 
             hive.SetFaction(Faction.OfInsects);
-            hive.questTags = HiveUtility.GetHive(pawn).questTags;
+            // An orphan queen may finish an already-issued job after its original hive is lost.
+            // Preserve inherited quest tags when a live home still exists.
+            hive.questTags = HiveUtility.GetHive(pawn)?.questTags;
             Messages.Message("A bug queen has created a new hive.", hive, MessageTypeDefOf.NegativeEvent);
             return true;
         }
@@ -425,13 +427,14 @@ namespace BetterInfestations
             {
                 nextDriverTick = Find.TickManager.TicksGame + 60;
 
-                Thing thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.itemValidator(pawn, true, false));
+                // Each search must use the group its validator accepts; Pawn cannot find items or corpses.
+                Thing thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.HaulableEver), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.itemValidator(pawn, true, false));
                 if (thing != null) return true;
 
                 thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.pawnValidator(pawn, true, false, false, false));
                 if (thing != null) return true;
 
-                thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Pawn), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.corpseValidator(pawn, true, false));
+                thing = GenClosest.ClosestThingReachable(pawn.Position, pawn.Map, ThingRequest.ForGroup(ThingRequestGroup.Corpse), PathEndMode.OnCell, TraverseParms.For(TraverseMode.PassDoors, Danger.Deadly, true, true, true), 8, ValidatorUtility.corpseValidator(pawn, true, false));
                 if (thing != null) return true;
             }
             return false;

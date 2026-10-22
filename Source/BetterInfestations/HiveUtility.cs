@@ -1,7 +1,6 @@
 using RimWorld;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Reflection;
 using Verse;
@@ -18,13 +17,15 @@ namespace BetterInfestations
         }
         public static bool AnyHivePreventsClaiming(Thing thing)
         {
-            if (!thing.Spawned) return false;
+            if (thing.DestroyedOrNull() || !thing.Spawned) return false;
 
             int num = GenRadial.NumCellsInRadius(2f);
             for (int i = 0; i < num; i++)
             {
                 IntVec3 c = thing.Position + GenRadial.RadialPattern[i];
-                if (c.InBounds(thing.Map) && c.GetFirstThing(thing.Map, thing.def) != null) return true;
+                // Check actual hives, preserving vanilla hive protection alongside this mod's hives.
+                if (c.InBounds(thing.Map) && (c.GetFirstThing(thing.Map, ThingDefOf.BI_Hive) != null
+                    || c.GetFirstThing<RimWorld.Hive>(thing.Map) != null)) return true;
             }
             return false;
         }
@@ -48,7 +49,8 @@ namespace BetterInfestations
                                 Lord lord2 = otherHive.CompSpawnerPawns.Lord[0];
                                 if (lord2 != null)
                                 {
-                                    lord.ReceiveMemo(memo);
+                                    // Notify the neighboring hive's lord, rather than repeating the original memo.
+                                    lord2.ReceiveMemo(memo);
                                 }
                             }
                         }
@@ -64,7 +66,8 @@ namespace BetterInfestations
                 if (mapHiveData == null) return null;
 
                 mapHiveData.pawnToHiveDict.TryGetValue(pawn, out Hive hive);
-                return hive;
+                // Stale ownership must not expose an unspawned hive to AI callers.
+                return mapHiveData.IsValidAssociation(pawn, hive) ? hive : null;
             }
             return null;
         }
@@ -78,7 +81,8 @@ namespace BetterInfestations
                 if (hive != null)
                 {
                     CompSpawnerPawns comp = hive.CompSpawnerPawns;
-                    if (comp == null) return null;
+                    // One malformed hive must not prevent finding a later lord's home.
+                    if (comp == null) continue;
 
                     for (int i = 0; i < 3; i++)
                     {
@@ -107,11 +111,15 @@ namespace BetterInfestations
         }
         public static bool WithinHive(Pawn pawn, Thing thing, bool NearOtherHive)
         {
-            if (pawn == null || thing == null) return false;
+            // Positions and the BoolGrid are meaningful only for spawned things on the same map.
+            if (pawn.DestroyedOrNull() || thing.DestroyedOrNull() || !pawn.Spawned || !thing.Spawned
+                || pawn.Map != thing.Map || !thing.Position.InBounds(pawn.Map)) return false;
 
             HiveData_MapComponent mapHiveData = pawn.Map.GetComponent<HiveData_MapComponent>();
+            if (mapHiveData == null) return false;
 
-            if (mapHiveData.pawnToHiveDict.TryGetValue(pawn, out Hive hive))
+            Hive hive = GetHive(pawn);
+            if (hive != null)
             {
                 if (thing.Position.DistanceTo(hive.Position) <= 8) return true;
             }

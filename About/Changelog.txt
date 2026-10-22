@@ -13,3 +13,25 @@
 1.0.6 - 1/7/2026 - tweaks and better threat scaling for world site generation, Odyssey insects added
 
 1.0.7 - 9/25/2026 - performance fixes and other improvements, thanks raindropsDGH!
+
+1.0.8 - 10/21/2026 - updated to 1.7 / net10.0
+
+- Added complete language keys
+- Fixed errors when insects delivered downed creatures to a hive.
+- Prevented Locust flight errors caused by notifications for jobs that had already ended.
+- Fixed insects sometimes redirecting hauled meat and other hive supplies to player stockpiles when a hive drop spot was blocked.
+- Fixed nearby hives failing to respond when another hive is attacked.
+- Fixed surviving insects losing their group orders when their hive is destroyed.
+- Fixed hunters failing to switch to assault orders when their hive is lost during a fight.
+- Fixed nearby objects incorrectly blocking claiming when no hive is present.
+- Improved recovery of hive ownership and hive areas when loading saves.
+- Fixed stale hive areas and invalid home references after hives or insects leave the map.
+- Fixed errors when queens finish building a new hive after losing their original home.
+- Fixed hive growth being calculated incorrectly after settling another colony.
+- Fixed the storyteller attempting to trigger infestation, swarming horde, and insect raid events that were disabled in mod settings.
+- Fixed infestation completion rewards being awarded again after reloading a completed site.
+- Fixed extra queen spawns caused by missing queen tracking or unavailable pawn sounds.
+- Restored initial jelly spawning at infestation sites and improved failed-spawn handling.
+- Fixed patrolling insects overlooking nearby food and corpses.
+- Fixed insects selecting unreachable power conduits.
+- Improved handling of missing targets and incomplete save data.

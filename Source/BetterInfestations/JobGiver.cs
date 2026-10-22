@@ -1,8 +1,6 @@
 using RimWorld;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using UnityEngine;
 using Verse;
 using Verse.AI;
 using Verse.AI.Group;
@@ -272,33 +270,25 @@ namespace BetterInfestations
     {
         public static Job ForceJob(Pawn pawn)
         {
-            if (pawn != null && pawn.Downed) return null;
+            if (pawn == null || !pawn.Spawned || pawn.Downed) return null;
             if (HiveUtility.JobsGivenRecentTick(pawn, "HaulToCell")) return null;
+            // Recognize the new job name as well as older saved gathering jobs.
+            if (HiveUtility.JobsGivenRecentTick(pawn, "BI_HaulToHive")) return null;
 
             Hive hive = HiveUtility.GetHive(pawn);
             if (hive == null) return null;
-
-            //IntVec3 pos = CellFinder.RandomClosewalkCellNear(hive.Position, pawn.Map, 5);
-            IntVec3 pos;
-            CellFinder.TryFindRandomCellNear(hive.Position, pawn.Map, 5,
-                (IntVec3 x) => x.Standable(pawn.Map) && !x.Fogged(pawn.Map) && !x.IsForbidden(pawn) && pawn.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Some),
-                out pos);
-
-            if (pos == IntVec3.Invalid || !pawn.CanReserve(pos))
-            {
-                return null;
-            }
-
-            //added for stockpile issue
-            if (pos.IsValid && pos.GetZone(pawn.Map) is Zone_Stockpile)
-                return null;
 
             Thing target = FindTarget(pawn);
             if (target == null) return null;
 
             if (!GenSight.LineOfSight(pawn.Position, target.Position, pawn.Map, true)) return null;
 
-            Job job = JobMaker.MakeJob(RimWorld.JobDefOf.HaulToCell, target, pos);
+            // Reject storage cells inside the search, so a rejected first roll can be retried.
+            if (!HiveHaulingUtility.TryFindDropCell(pawn, hive, target, out IntVec3 pos)) return null;
+
+            Job job = JobMaker.MakeJob(JobDefOf.BI_HaulToHive, target, pos);
+            // Persist the intended home; losing it must cancel this haul rather than redirect it.
+            job.SetTarget(TargetIndex.C, hive);
             job.canBashDoors = true;
             job.canBashFences = true;
             job.attackDoorIfTargetLost = true;
@@ -374,7 +364,9 @@ namespace BetterInfestations
                     return JobGiver_Hunt.ForceJob(pawn);
                 }
             }
-            if (!HiveUtility.JobsGivenRecentTick(pawn, "HaulToCell"))
+            // Keep the patrol cooldown consistent with the dedicated gathering job.
+            if (!HiveUtility.JobsGivenRecentTick(pawn, "HaulToCell")
+                && !HiveUtility.JobsGivenRecentTick(pawn, "BI_HaulToHive"))
             {
                 target = JobGiver_Gather.FindTarget(pawn);
                 if (target != null)
@@ -487,7 +479,8 @@ namespace BetterInfestations
                         {
                             if (b.PowerComp.PowerNet.HasActivePowerSource && b.PowerComp.PowerNet.batteryComps.Count > 0 && PowerSourceNearby(b) && !b.Fogged())
                             {
-                                if (pawn.CanReserve(t) && pawn.CanReach(pawn, PathEndMode.OnCell, Danger.None, true, true, TraverseMode.NoPassClosedDoors))
+                                // Test access to the conduit target instead of the pawn's own cell.
+                                if (pawn.CanReserve(t) && pawn.CanReach(t, PathEndMode.OnCell, Danger.None, true, true, TraverseMode.NoPassClosedDoors))
                                 {
                                     targetList.Add(t);
                                 }

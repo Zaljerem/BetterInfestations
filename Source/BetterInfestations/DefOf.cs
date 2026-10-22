@@ -26,6 +26,8 @@ namespace BetterInfestations
     {
         public static JobDef BI_Maintain;
         public static JobDef BI_Butcher;
+        // Dedicated hauling prevents vanilla storage fallback from choosing a player stockpile.
+        public static JobDef BI_HaulToHive;
         public static JobDef BI_GotoSpawnHive;
         public static JobDef BI_GotoPatrol;
         public static JobDef BI_ChewConduits;

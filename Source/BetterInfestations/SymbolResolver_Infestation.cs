@@ -1,8 +1,7 @@
 using RimWorld;
 using RimWorld.BaseGen;
 using System;
-using Unity.Burst.Intrinsics;
-using UnityEngine;
+using Waylith.Math;
 using Verse;
 
 namespace BetterInfestations
@@ -170,12 +169,16 @@ namespace BetterInfestations
             // Queen
             if (spawnQueen)
             {
-                hive.CompSpawnerPawns.TrySpawnPawn(
+                // Site queens count toward the same flag as queens spawned by the regular timer.
+                if (hive.CompSpawnerPawns.TrySpawnPawn(
                     0,
                     out Pawn _,
                     PawnKindDefOf.BI_Queen,
                     false
-                );
+                ))
+                {
+                    hive.CompSpawnerPawns.queenSpawned = true;
+                }
             }
 
             HiveUtility.SpawnRandomItems(hive);
@@ -187,6 +190,14 @@ namespace BetterInfestations
             int count) where T : ThingComp
         {
             T comp = hive.GetComp<T>();
+            // The mod's jelly spawner derives from ThingComp, not RimWorld.CompSpawner.
+            // Handle it explicitly so site jelly rolls actually execute.
+            if (comp is CompSpawnerJelly jellySpawner &&
+                jellySpawner.PropsSpawner.thingToSpawn == expected)
+            {
+                for (int i = 0; i < count; i++)
+                    jellySpawner.TryDoSpawn();
+            }
             if (comp is CompSpawner spawner &&
                 spawner.PropsSpawner.thingToSpawn == expected)
             {

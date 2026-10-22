@@ -2,8 +2,6 @@
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
-using Verse.AI;
-using Verse.AI.Group;
 using Verse.Sound;
 using System.Collections.Generic;
 using UnityEngine;
@@ -182,7 +180,7 @@ namespace BetterInfestations
             Rect drawTexRect1 = new Rect(0f, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect1, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect1 = new Rect(x + 8f, y, width, height);
-            Widgets.Label(labelRect1, "General");
+            Widgets.Label(labelRect1, "BI_General".Translate());
 
             y += 32f;
             Rect checkboxRect4 = new Rect(x + 8f, y, width, height);
@@ -190,7 +188,7 @@ namespace BetterInfestations
             Widgets.Checkbox(checkboxVec2_4, ref settings.infestationsAllowed);
             GUI.color = darkerWhite;
             Rect labelRect12 = new Rect(x + 40f, y, width, height);
-            Widgets.Label(labelRect12, "Allow infestations");
+            Widgets.Label(labelRect12, "BI_AllowInfestations".Translate());
             GUI.color = Color.white;
             TooltipHandler.TipRegionByKey(labelRect12, "BI_InfestationsTip");
 
@@ -200,7 +198,7 @@ namespace BetterInfestations
             Widgets.Checkbox(checkboxVec2_5, ref settings.raidsAllowed);
             GUI.color = darkerWhite;
             Rect labelRect13 = new Rect(x + 40f, y, width, height);
-            Widgets.Label(labelRect13, "Allow raiding insects");
+            Widgets.Label(labelRect13, "BI_AllowRaidingInsects".Translate());
             GUI.color = Color.white;
             TooltipHandler.TipRegionByKey(labelRect13, "BI_RaidingInsectsTip");
 
@@ -210,7 +208,7 @@ namespace BetterInfestations
             Widgets.Checkbox(checkboxVec2_7, ref settings.swarmingHordeEventAllowed);
             GUI.color = darkerWhite;
             Rect labelRect16 = new Rect(x + 40f, y, width, height);
-            Widgets.Label(labelRect16, "Allow swarming horde event");
+            Widgets.Label(labelRect16, "BI_AllowSwarmingHorde".Translate());
             GUI.color = Color.white;
             TooltipHandler.TipRegionByKey(labelRect16, "BI_SwarmingHordeTip");
 
@@ -220,7 +218,7 @@ namespace BetterInfestations
             Widgets.Checkbox(checkboxVec2_8, ref settings.produceLeather);
             GUI.color = darkerWhite;
             Rect labelRect17 = new Rect(x + 40f, y, width, height);
-            Widgets.Label(labelRect17, "Butchered corpses produce leather");
+            Widgets.Label(labelRect17, "BI_CorpsesProduceLeather".Translate());
             GUI.color = Color.white;
             TooltipHandler.TipRegionByKey(labelRect17, "BI_ProduceLeatherTip");
 
@@ -230,7 +228,7 @@ namespace BetterInfestations
             Widgets.Checkbox(checkboxVec2_2, ref settings.notificationInf);
             GUI.color = darkerWhite;
             Rect labelRect9 = new Rect(x + 40f, y, width, height);
-            Widgets.Label(labelRect9, "Notification of Infestation");
+            Widgets.Label(labelRect9, "BI_InfestationNotify".Translate());
             GUI.color = Color.white;
             TooltipHandler.TipRegionByKey(labelRect9, "BI_NotificationTip");
 
@@ -242,7 +240,7 @@ namespace BetterInfestations
             Rect drawTexRect6 = new Rect(0f, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect6, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect7 = new Rect(x + 8f, y, width, height);
-            Widgets.Label(labelRect7, "Queen: Interval to spawn additional hives");
+            Widgets.Label(labelRect7, "BI_QueenSpawnInterval".Translate());
 
             y += 48f;
             Rect sliderRect9 = new Rect(x + 8f, y, width - 4f, height);
@@ -264,7 +262,7 @@ namespace BetterInfestations
             Rect drawTexRect8 = new Rect(0f, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect8, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect10 = new Rect(x + 8f, y, width, height);
-            Widgets.Label(labelRect10, "Hive: Interval to reproduce additional hives");
+            Widgets.Label(labelRect10, "BI_HiveSpawnInterval".Translate());
 
             y += 48f;
             Rect sliderRect11 = new Rect(x + 8f, y, width - 4f, height);
@@ -286,7 +284,7 @@ namespace BetterInfestations
             Rect drawTexRect9 = new Rect(0f, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect9, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect15 = new Rect(x + 8f, y, width, height);
-            Widgets.Label(labelRect15, "Hive settings");
+            Widgets.Label(labelRect15, "BI_HiveSettings".Translate());
 
             y += 32f;
             Rect checkboxRect1 = new Rect(x + 8f, y, width, height);
@@ -294,7 +292,7 @@ namespace BetterInfestations
             Widgets.Checkbox(checkboxVec2_1, ref settings.queensAllowed);
             GUI.color = darkerWhite;
             Rect labelRect2 = new Rect(x + 40f, y, width, height);
-            Widgets.Label(labelRect2, "Spawn queens");
+            Widgets.Label(labelRect2, "BI_SpawnQueens".Translate());
             GUI.color = Color.white;
             TooltipHandler.TipRegionByKey(labelRect2, "BI_SpawnQueensTip");
 
@@ -304,22 +302,22 @@ namespace BetterInfestations
             Widgets.Checkbox(checkboxVec2_3, ref settings.newbornInsects);
             GUI.color = darkerWhite;
             Rect labelRect11 = new Rect(x + 40f, y, width, height);
-            Widgets.Label(labelRect11, "Spawn newborns");
+            Widgets.Label(labelRect11, "BI_SpawnNewborns".Translate());
             GUI.color = Color.white;
             TooltipHandler.TipRegionByKey(labelRect11, "BI_SpawnNewbornsTip");
 
             y += 48f;
             Rect sliderRect13 = new Rect(x + 8f, y, width, height);
-            settings.maxHivesPerMap = (int)Widgets.HorizontalSlider(sliderRect13, settings.maxHivesPerMap, 1f, 50f, false, null, "Maximum hives per map", settings.maxHivesPerMap.ToString(), 1f);
+            settings.maxHivesPerMap = (int)Widgets.HorizontalSlider(sliderRect13, settings.maxHivesPerMap, 1f, 50f, false, null, "BI_MaxHives".Translate(), settings.maxHivesPerMap.ToString(), 1f);
             TooltipHandler.TipRegionByKey(sliderRect13, "BI_HiveLimitTip");
 
             y += 32f;
             Rect sliderRect16 = new Rect(x + 8f, y, width - 4f, height);
-            settings.hiveLevel = (int)Widgets.HorizontalSlider(sliderRect16, settings.hiveLevel, 0f, 2f, false, null, "Initial number of hunting parties", settings.hiveLevel.ToString(), 1f);
+            settings.hiveLevel = (int)Widgets.HorizontalSlider(sliderRect16, settings.hiveLevel, 0f, 2f, false, null, "BI_InitialHuntingParties".Translate(), settings.hiveLevel.ToString(), 1f);
 
             y += 32f;
             Rect sliderRect14 = new Rect(x + 8f, y, width - 4f, height);
-            settings.initialPawnsPoints = (int)Widgets.HorizontalSlider(sliderRect14, settings.initialPawnsPoints, 150f, 400f, false, null, "Initial spawn points per group", settings.initialPawnsPoints.ToString(), 50f);
+            settings.initialPawnsPoints = (int)Widgets.HorizontalSlider(sliderRect14, settings.initialPawnsPoints, 150f, 400f, false, null, "BI_InitialSpawnPoints".Translate(), settings.initialPawnsPoints.ToString(), 50f);
             TooltipHandler.TipRegionByKey(sliderRect14, "BI_InitialScoreTip");
 
             //Right side
@@ -328,11 +326,11 @@ namespace BetterInfestations
             Rect drawTexRect2 = new Rect(x, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect2, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect3 = new Rect(x + 8f, y, width, height);
-            Widgets.Label(labelRect3, "Hive: Defense group spawn intervals");
+            Widgets.Label(labelRect3, "BI_HiveDefenseSpawnIntervals".Translate());
 
             y += 48f;
             Rect sliderRect1 = new Rect(x, y, width - 4f, height);
-            settings.minSpawnInDays[0] = HorizontalSliderFraction(sliderRect1, settings.minSpawnInDays[0], 0.05f, 3f, false, null, "Minimum interval", settings.minSpawnInDays[0].ToString() + " Days", 0.05f, 2);
+            settings.minSpawnInDays[0] = HorizontalSliderFraction(sliderRect1, settings.minSpawnInDays[0], 0.05f, 3f, false, null, "BI_MinInterval".Translate(), settings.minSpawnInDays[0].ToString() + " " + "BI_Days".Translate(), 0.05f, 2);
             if (settings.minSpawnInDays[0] > settings.maxSpawnInDays[0])
             {
                 settings.maxSpawnInDays[0] = settings.minSpawnInDays[0];
@@ -340,7 +338,7 @@ namespace BetterInfestations
 
             y += 32f;
             Rect sliderRect2 = new Rect(x, y, width - 4f, height);
-            settings.maxSpawnInDays[0] = HorizontalSliderFraction(sliderRect2, settings.maxSpawnInDays[0], 0.05f, 3f, false, null, "Maximum interval", settings.maxSpawnInDays[0].ToString() + " Days", 0.05f, 2);
+            settings.maxSpawnInDays[0] = HorizontalSliderFraction(sliderRect2, settings.maxSpawnInDays[0], 0.05f, 3f, false, null, "BI_MaxInterval".Translate(), settings.maxSpawnInDays[0].ToString() + " " + "BI_Days".Translate(), 0.05f, 2);
             if (settings.maxSpawnInDays[0] < settings.minSpawnInDays[0])
             {
                 settings.minSpawnInDays[0] = settings.maxSpawnInDays[0];
@@ -350,11 +348,11 @@ namespace BetterInfestations
             Rect drawTexRect3 = new Rect(x, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect3, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect4 = new Rect(x + 8f, outRect.position.y + 104f, width, height);
-            Widgets.Label(labelRect4, "Hive: Hunter group 1 spawn intervals");
+            Widgets.Label(labelRect4, "BI_HunterGroupOneSpawnIntervals".Translate());
 
             y += 48f;
             Rect sliderRect3 = new Rect(x, y, width - 4f, height);
-            settings.minSpawnInDays[1] = HorizontalSliderFraction(sliderRect3, settings.minSpawnInDays[1], 0.05f, 3f, false, null, "Minimum interval", settings.minSpawnInDays[1].ToString() + " Days", 0.05f, 2);
+            settings.minSpawnInDays[1] = HorizontalSliderFraction(sliderRect3, settings.minSpawnInDays[1], 0.05f, 3f, false, null, "BI_MinInterval".Translate(), settings.minSpawnInDays[1].ToString() + " " + "BI_Days".Translate(), 0.05f, 2);
             if (settings.minSpawnInDays[1] > settings.maxSpawnInDays[1])
             {
                 settings.maxSpawnInDays[1] = settings.minSpawnInDays[1];
@@ -362,7 +360,7 @@ namespace BetterInfestations
 
             y += 32f;
             Rect sliderRect4 = new Rect(x, y, width - 4f, height);
-            settings.maxSpawnInDays[1] = HorizontalSliderFraction(sliderRect4, settings.maxSpawnInDays[1], 0.05f, 3f, false, null, "Maximum interval", settings.maxSpawnInDays[1].ToString() + " Days", 0.05f, 2);
+            settings.maxSpawnInDays[1] = HorizontalSliderFraction(sliderRect4, settings.maxSpawnInDays[1], 0.05f, 3f, false, null, "BI_MaxInterval".Translate(), settings.maxSpawnInDays[1].ToString() + " " + "BI_Days".Translate(), 0.05f, 2);
             if (settings.maxSpawnInDays[1] < settings.minSpawnInDays[1])
             {
                 settings.minSpawnInDays[1] = settings.maxSpawnInDays[1];
@@ -372,11 +370,11 @@ namespace BetterInfestations
             Rect drawTexRect4 = new Rect(x, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect4, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect5 = new Rect(x + 8f, y, width, height);
-            Widgets.Label(labelRect5, "Hive: Hunter group 2 spawn intervals");
+            Widgets.Label(labelRect5, "BI_HunterGroupTwoSpawnIntervals".Translate());
 
             y += 48f;
             Rect sliderRect5 = new Rect(x, y, width - 4f, height);
-            settings.minSpawnInDays[2] = HorizontalSliderFraction(sliderRect5, settings.minSpawnInDays[2], 0.05f, 3f, false, null, "Minimum interval", settings.minSpawnInDays[2].ToString() + " Days", 0.05f, 2);
+            settings.minSpawnInDays[2] = HorizontalSliderFraction(sliderRect5, settings.minSpawnInDays[2], 0.05f, 3f, false, null, "BI_MinInterval".Translate(), settings.minSpawnInDays[2].ToString() + " " + "BI_Days".Translate(), 0.05f, 2);
             if (settings.minSpawnInDays[2] > settings.maxSpawnInDays[2])
             {
                 settings.maxSpawnInDays[2] = settings.minSpawnInDays[2];
@@ -384,7 +382,7 @@ namespace BetterInfestations
 
             y += 32f;
             Rect sliderRect6 = new Rect(x, y, width - 4f, height);
-            settings.maxSpawnInDays[2] = HorizontalSliderFraction(sliderRect6, settings.maxSpawnInDays[2], 0.05f, 3f, false, null, "Maximum interval", settings.maxSpawnInDays[2].ToString() + " Days", 0.05f, 2);
+            settings.maxSpawnInDays[2] = HorizontalSliderFraction(sliderRect6, settings.maxSpawnInDays[2], 0.05f, 3f, false, null, "BI_MaxInterval".Translate(), settings.maxSpawnInDays[2].ToString() + " " + "BI_Days".Translate(), 0.05f, 2);
             if (settings.maxSpawnInDays[2] < settings.minSpawnInDays[2])
             {
                 settings.minSpawnInDays[2] = settings.maxSpawnInDays[2];
@@ -394,11 +392,11 @@ namespace BetterInfestations
             Rect drawTexRect7 = new Rect(x, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect7, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect8 = new Rect(x + 8f, y, width, height);
-            Widgets.Label(labelRect8, "Difficulty settings");
+            Widgets.Label(labelRect8, "BI_Difficulty".Translate());
 
             y += 32f;
             Rect buttonTextRect1 = new Rect(x, y, width - 208f, height);
-            bool bEasy = Widgets.ButtonText(buttonTextRect1, "Easy", true);
+            bool bEasy = Widgets.ButtonText(buttonTextRect1, "BI_Easy".Translate(), true);
             if (bEasy)
             {
                 EasyDefaults();
@@ -406,7 +404,7 @@ namespace BetterInfestations
 
             y += 32f;
             Rect buttonTextRect2 = new Rect(x, y, width - 208f, height);
-            bool bNormal = Widgets.ButtonText(buttonTextRect2, "Normal", true);
+            bool bNormal = Widgets.ButtonText(buttonTextRect2, "BI_Normal".Translate(), true);
             if (bNormal)
             {
                 NormalDefaults();
@@ -414,7 +412,7 @@ namespace BetterInfestations
 
             y += 32f;
             Rect buttonTextRect3 = new Rect(x, y, width - 208f, height);
-            bool bHard = Widgets.ButtonText(buttonTextRect3, "Hard", true);
+            bool bHard = Widgets.ButtonText(buttonTextRect3, "BI_Hard".Translate(), true);
             if (bHard)
             {
                 HardDefaults();
@@ -422,7 +420,7 @@ namespace BetterInfestations
 
             y += 32f;
             Rect buttonTextRect4 = new Rect(x, y, width - 208f, height);
-            bool bNightmare = Widgets.ButtonText(buttonTextRect4, "Nightmare", true);
+            bool bNightmare = Widgets.ButtonText(buttonTextRect4, "BI_Nightmare".Translate(), true);
             if (bNightmare)
             {
                 NightmareDefaults();
@@ -432,11 +430,11 @@ namespace BetterInfestations
             Rect drawTexRect10 = new Rect(x, y, width + 8f, height);
             GUI.DrawTexture(drawTexRect10, SolidColorMaterials.NewSolidColorTexture(backgroundColor));
             Rect labelRect18 = new Rect(x + 8f, y, width, height);
-            Widgets.Label(labelRect18, "Warning: Uninstall options below !!!");
+            Widgets.Label(labelRect18, "BI_UninstallOptions".Translate());
 
             y += 32f;
             Rect buttonTextRect5 = new Rect(x, y, width - 208f, height);
-            bool bUninstall = Widgets.ButtonText(buttonTextRect5, "Uninstall", true);
+            bool bUninstall = Widgets.ButtonText(buttonTextRect5, "BI_Uninstall".Translate(), true);
             TooltipHandler.TipRegionByKey(buttonTextRect5, "BI_UninstallTip");
             if (bUninstall)
             {
@@ -489,17 +487,16 @@ namespace BetterInfestations
                             Hive hive = hives[h] as Hive;
                             if (hive.CompSpawnerPawns != null)
                             {
-                                if (hive.CompSpawnerPawns.Lord[0] != null)
+                                // Uninstall deliberately removes groups, unlike ordinary hive destruction.
+                                // Clear references so DeSpawn cannot send memos to cleaned-up lords.
+                                for (int group = 0; group < hive.CompSpawnerPawns.Lord.Length; group++)
                                 {
-                                    Find.Maps[i].lordManager.RemoveLord(hive.CompSpawnerPawns.Lord[0]);
-                                }
-                                if (hive.CompSpawnerPawns.Lord[1] != null)
-                                {
-                                    Find.Maps[i].lordManager.RemoveLord(hive.CompSpawnerPawns.Lord[1]);
-                                }
-                                if (hive.CompSpawnerPawns.Lord[2] != null)
-                                {
-                                    Find.Maps[i].lordManager.RemoveLord(hive.CompSpawnerPawns.Lord[2]);
+                                    var lord = hive.CompSpawnerPawns.Lord[group];
+                                    if (lord != null && Find.Maps[i].lordManager.lords.Contains(lord))
+                                    {
+                                        Find.Maps[i].lordManager.RemoveLord(lord);
+                                    }
+                                    hive.CompSpawnerPawns.Lord[group] = null;
                                 }
                             }
                             hives[h].Destroy(DestroyMode.Vanish);
@@ -516,14 +513,14 @@ namespace BetterInfestations
                         }
                     }
                 }
-                Messages.Message("Better Infestations uninstalled successfully!", MessageTypeDefOf.PositiveEvent);
+                Messages.Message("BI_UninstallSuccess".Translate(), MessageTypeDefOf.PositiveEvent);
             }
         }
         public static float HorizontalSliderFraction(Rect rect, float value, float leftValue, float rightValue, bool middleAlignment = false, string label = null, string leftAlignedLabel = null, string rightAlignedLabel = null, float roundTo = -1f, int fractionalDigit = 1)
         {
             if (middleAlignment || !label.NullOrEmpty())
             {
-                rect.y += Mathf.Round((rect.height - 16f) / 2f);
+                rect.y += Waylith.Math.Mathf.Round((rect.height - 16f) / 2f);
             }
             if (!label.NullOrEmpty())
             {
@@ -557,7 +554,7 @@ namespace BetterInfestations
             }
             if (roundTo > 0)
             {
-                num = (float)Math.Round(Mathf.RoundToInt(num / roundTo) * roundTo, fractionalDigit);
+                num = (float)Math.Round(Waylith.Math.Mathf.RoundToInt(num / roundTo) * roundTo, fractionalDigit);
             }
             if (value != num)
             {
@@ -566,6 +563,6 @@ namespace BetterInfestations
             return num;
         }
 
-        public override string SettingsCategory() => "Better Infestations";
+        public override string SettingsCategory() => "BI_ModName".Translate();
     }
 }
